@@ -170,19 +170,19 @@ always_comb begin
             alu_a_sel = ALU_A_PC;
             alu_b_sel = ALU_B_IMM;
 
-            imm = {imm_u, 12'h000};
+            imm = {imm_u, {12{1'b0}}};
         end
         OPCODE_LUI: begin
             alu_a_sel = ALU_A_ZERO;
             alu_b_sel = ALU_B_IMM;
 
-            imm = {imm_u, 12'h000};
+            imm = {imm_u, {12{1'b0}}};
         end
         default: begin
             alu_a_sel = ALU_A_ZERO;
             alu_b_sel = ALU_B_ZERO;
 
-            imm = 32'h0000_0000;
+            imm = {XLEN{1'b0}};
         end
     endcase
 end

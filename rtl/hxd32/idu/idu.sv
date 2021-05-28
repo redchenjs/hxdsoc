@@ -112,7 +112,7 @@ always_comb begin
         RD_WR_PC_NEXT:
             rd_wr_data = pc_next_i;
         default:
-            rd_wr_data = 32'h0000_0000;
+            rd_wr_data = {XLEN{1'b0}};
     endcase
 end
 

@@ -57,7 +57,7 @@ always_comb begin
         ALU_A_PC:
             alu_a_data = iram_rd_addr_i;
         default:
-            alu_a_data = 32'h0000_0000;
+            alu_a_data = {XLEN{1'b0}};
     endcase
 
     case (alu_b_sel_i)
@@ -66,7 +66,7 @@ always_comb begin
         ALU_B_IMM:
             alu_b_data = imm_rd_data_i;
         default:
-            alu_b_data = 32'h0000_0000;
+            alu_b_data = {XLEN{1'b0}};
     endcase
 end
 

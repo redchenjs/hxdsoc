@@ -85,7 +85,7 @@ always_comb begin
         ALU_OP_1_SLTU:
             alu_data = res_sltu;
         default:
-            alu_data = 32'h0000_0000;
+            alu_data = {XLEN{1'b0}};
     endcase
 end
 

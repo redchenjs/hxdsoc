@@ -5,7 +5,9 @@
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
-module ram_rw(
+module ram_rw #(
+    parameter XLEN = 32
+) (
     input logic clk_i,
     input logic rst_n_i,
 
@@ -14,71 +16,174 @@ module ram_rw(
     input logic       spi_byte_vld_i,
     input logic [7:0] spi_byte_data_i,
 
-    output logic iram_rw_sel_o,
+    output logic cpu_rst_n_o,
+
+    output logic iram_wr_sel_o,
+    output logic iram_rd_sel_o,
+
+    output logic dram_wr_sel_o,
     output logic dram_rd_sel_o,
 
-    output logic        iram_wr_en_o,
-    output logic [15:0] iram_wr_addr_o,
-    output logic [15:0] iram_wr_data_o,
+    output logic       ram_wr_en_o,
+    output logic [3:0] ram_wr_byte_en_o,
 
-    output logic [15:0] dram_rd_addr_o
+    output logic [XLEN-1:0] ram_rw_addr_o
 );
 
-localparam [7:0] RAM_WR_ST = 8'h2a;
-localparam [7:0] RAM_WR_SP = 8'h2b;
+typedef enum logic [7:0] {
+    CPU_RST = 8'h2a,
+    CPU_RUN = 8'h2b,
+    IRAM_WR = 8'h2c,
+    IRAM_RD = 8'h2d,
+    DRAM_WR = 8'h2e,
+    DRAM_RD = 8'h2f
+} cmd_t;
 
-logic ram_wr;
-logic ram_done;
+logic cpu_rst_n;
 
-logic        wr_en;
-logic [12:0] wr_addr;
+logic iram_wr_sel;
+logic iram_rd_sel;
 
-assign cpu_rst_n_o = ram_done;
-assign iram_wr_en_o = spi_byte_vld_i & ram_wr;
+logic dram_wr_sel;
+logic dram_rd_sel;
 
-assign iram_wr_addr_o = wr_addr;
+logic       ram_wr_en;
+logic [3:0] ram_wr_byte_en;
+
+logic [XLEN-1:0] ram_rw_addr;
+
+assign cpu_rst_n_o = cpu_rst_n;
+
+assign iram_wr_sel_o = iram_wr_sel;
+assign iram_rd_sel_o = iram_rd_sel;
+
+assign dram_wr_sel_o = dram_wr_sel;
+assign dram_rd_sel_o = dram_rd_sel;
+
+assign iram_wr_en_o = spi_byte_vld_i & ram_wr_en;
+assign iram_wr_byte_en_o = iram_wr_byte_en;
+
+assign ram_rw_addr_o = ram_rw_addr;
 
 always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
-        ram_wr   <= 1'b0;
-        ram_done <= 1'b0;
+        cpu_rst_n <= 1'b0;
 
-//        wr_byte_en <= 4'b0000;
+        iram_wr_sel <= 1'b0;
+        iram_rd_sel <= 1'b0;
 
-        wr_addr <= 13'h0000;
+        dram_wr_sel <= 1'b0;
+        dram_rd_sel <= 1'b0;
+
+        ram_wr_en <= 1'b0;
+        ram_wr_byte_en <= 4'b0000;
+
+        ram_rw_addr <= {XLEN{1'b0}};
     end else begin
         if (spi_byte_vld_i) begin
             if (!dc_i) begin  // Command
                 case (spi_byte_data_i)
-                    RAM_WR_ST: begin    // Write RAM Start
-                        ram_wr   <= 1'b1;
-                        ram_done <= 1'b0;
-                        
-//                        wr_byte_en <= 4'b1000;
+                    CPU_RST: begin
+                        cpu_rst_n <= 1'b0;
+
+                        iram_wr_sel <= 1'b0;
+                        iram_rd_sel <= 1'b0;
+
+                        dram_wr_sel <= 1'b0;
+                        dram_rd_sel <= 1'b0;
+
+                        ram_wr_en <= 1'b0;
+                        ram_wr_byte_en <= 4'b0000;
                     end
-                    RAM_WR_SP: begin    // Write RAM Stop
-                        ram_wr   <= 1'b0;
-                        ram_done <= 1'b1;
-                    
-//                        wr_byte_en <= 4'b0000;
+                    CPU_RUN: begin
+                        cpu_rst_n <= 1'b1;
+
+                        iram_wr_sel <= 1'b0;
+                        iram_rd_sel <= 1'b0;
+
+                        dram_wr_sel <= 1'b0;
+                        dram_rd_sel <= 1'b0;
+
+                        ram_wr_en <= 1'b0;
+                        ram_wr_byte_en <= 4'b0000;
+                    end
+                    IRAM_WR: begin
+                        cpu_rst_n <= 1'b0;
+
+                        iram_wr_sel <= 1'b1;
+                        iram_rd_sel <= 1'b0;
+
+                        dram_wr_sel <= 1'b0;
+                        dram_rd_sel <= 1'b0;
+
+                        ram_wr_en <= 1'b1;
+                        ram_wr_byte_en <= 4'b0001;
+                    end
+                    IRAM_RD: begin
+                        cpu_rst_n <= 1'b0;
+
+                        iram_wr_sel <= 1'b0;
+                        iram_rd_sel <= 1'b1;
+
+                        dram_wr_sel <= 1'b0;
+                        dram_rd_sel <= 1'b0;
+
+                        ram_wr_en <= 1'b0;
+                        ram_wr_byte_en <= 4'b0000;
+                    end
+                    DRAM_WR: begin
+                        cpu_rst_n <= 1'b0;
+
+                        iram_wr_sel <= 1'b0;
+                        iram_rd_sel <= 1'b0;
+
+                        dram_wr_sel <= 1'b1;
+                        dram_rd_sel <= 1'b0;
+
+                        ram_wr_en <= 1'b0;
+                        ram_wr_byte_en <= 4'b0000;
+                    end
+                    DRAM_RD: begin
+                        cpu_rst_n <= 1'b0;
+
+                        iram_wr_sel <= 1'b0;
+                        iram_rd_sel <= 1'b0;
+
+                        dram_wr_sel <= 1'b0;
+                        dram_rd_sel <= 1'b1;
+
+                        ram_wr_en <= 1'b0;
+                        ram_wr_byte_en <= 4'b0000;
                     end
                     default: begin
-                        ram_wr   <= 1'b0;
-                        ram_done <= 1'b0;
-                
-//                        wr_byte_en <= 4'b0000;
+                        cpu_rst_n <= 1'b0;
+
+                        iram_wr_sel <= 1'b0;
+                        iram_rd_sel <= 1'b0;
+
+                        dram_wr_sel <= 1'b0;
+                        dram_rd_sel <= 1'b0;
+
+                        ram_wr_en <= 1'b0;
+                        ram_wr_byte_en <= 4'b0000;
                     end
                 endcase
-                
-                wr_addr <= 13'h0000;
+
+                ram_rw_addr <= {XLEN{1'b0}};
             end else begin    // Data
-                ram_wr   <= ram_wr;
-                ram_done <= 1'b0;
+                cpu_rst_n <= cpu_rst_n;
 
-//                wr_byte_en <= {wr_byte_en[0], wr_byte_en[3:1]};
+                iram_wr_sel <= iram_wr_sel;
+                iram_rd_sel <= iram_rd_sel;
 
-                wr_addr <= wr_addr + 1'b1;
+                dram_wr_sel <= dram_wr_sel;
+                dram_rd_sel <= dram_rd_sel;
+
+                ram_wr_en <= ram_wr_en;
+                ram_wr_byte_en <= {ram_wr_byte_en[2:0], ram_wr_byte_en[3]};
+
+                ram_rw_addr <= ram_rw_addr + ~cpu_rst_n;
             end
         end
     end
