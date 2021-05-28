@@ -60,8 +60,8 @@ assign iram_rd_sel_o = iram_rd_sel;
 assign dram_wr_sel_o = dram_wr_sel;
 assign dram_rd_sel_o = dram_rd_sel;
 
-assign iram_wr_en_o = spi_byte_vld_i & ram_wr_en;
-assign iram_wr_byte_en_o = iram_wr_byte_en;
+assign ram_wr_en_o = spi_byte_vld_i & ram_wr_en;
+assign ram_wr_byte_en_o = ram_wr_byte_en;
 
 assign ram_rw_addr_o = ram_rw_addr;
 

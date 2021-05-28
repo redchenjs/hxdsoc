@@ -39,6 +39,11 @@ logic dram_wr_sel;
 logic       spi_byte_vld;
 logic [7:0] spi_byte_data;
 
+logic       ram_wr_en;
+logic [3:0] ram_wr_byte_en;
+
+logic [7:0] ram_rd_data;
+
 logic [XLEN-1:0] ram_rw_addr;
 
 logic [XLEN-1:0] iram_rd_addr;
@@ -71,7 +76,7 @@ spi_slave spi_slave(
     .clk_i(sys_clk),
     .rst_n_i(sys_rst_n),
 
-    .spi_byte_data_i(dram_rd_data_b),
+    .spi_byte_data_i(ram_rd_data),
 
     .spi_sclk_i(spi_sclk_i),
     .spi_mosi_i(spi_mosi_i),
@@ -94,14 +99,16 @@ ram_rw #(
     .spi_byte_vld_i(spi_byte_vld),
     .spi_byte_data_i(spi_byte_data),
 
+    .cpu_rst_n_o(cpu_rst_n),
+
     .iram_rd_sel_o(iram_rd_sel),
     .iram_wr_sel_o(iram_wr_sel),
 
     .dram_rd_sel_o(dram_rd_sel),
     .dram_wr_sel_o(dram_wr_sel),
 
-    .iram_wr_en_o(iram_wr_en),
-    .iram_wr_byte_en_o(iram_wr_byte_en),
+    .ram_wr_en_o(ram_wr_en),
+    .ram_wr_byte_en_o(ram_wr_byte_en),
     
     .ram_rw_addr_o(ram_rw_addr)
 );
@@ -139,11 +146,10 @@ ram #(
     .dram_wr_data_b_i({spi_byte_data, spi_byte_data, spi_byte_data, spi_byte_data}),
     .dram_wr_byte_en_b_i(ram_wr_byte_en),
 
-    .iram_rd_data_a_o(iram_rd_data_a),
-    .iram_rd_data_b_o(iram_rd_data_b),
+    .iram_rd_data_o(iram_rd_data),
+    .dram_rd_data_o(dram_rd_data),
 
-    .dram_rd_data_a_o(dram_rd_data_a),
-    .dram_rd_data_b_o(dram_rd_data_b)
+    .ram_rd_data_o(ram_rd_data)
 );
 
 hxd32 #(

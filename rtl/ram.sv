@@ -29,19 +29,19 @@ module ram #(
     input logic      [3:0] iram_wr_byte_en_i,
 
     input logic            dram_wr_en_a_i,
-    input logic            dram_wr_en_b_i,
     input logic [XLEN-1:0] dram_wr_addr_a_i,
-    input logic [XLEN-1:0] dram_wr_addr_b_i,
     input logic [XLEN-1:0] dram_wr_data_a_i,
-    input logic [XLEN-1:0] dram_wr_data_b_i,
     input logic      [3:0] dram_wr_byte_en_a_i,
+
+    input logic            dram_wr_en_b_i,
+    input logic [XLEN-1:0] dram_wr_addr_b_i,
+    input logic [XLEN-1:0] dram_wr_data_b_i,
     input logic      [3:0] dram_wr_byte_en_b_i,
 
-    output logic [XLEN-1:0] iram_rd_data_a_o,
-    output logic      [7:0] iram_rd_data_b_o,
+    output logic [XLEN-1:0] iram_rd_data_o,
+    output logic [XLEN-1:0] dram_rd_data_o,
 
-    output logic [XLEN-1:0] dram_rd_data_a_o,
-    output logic      [7:0] dram_rd_data_b_o
+    output logic [7:0] ram_rd_data_o
 );
 
 logic [XLEN-1:0] iram_rw_addr_u;
@@ -60,11 +60,12 @@ logic      [7:0] iram_rd_data_b;
 logic [XLEN-1:0] dram_rd_data_a;
 logic      [7:0] dram_rd_data_b;
 
-assign iram_rd_data_a_o = iram_rd_data_a;
-assign iram_rd_data_b_o = iram_rd_data_b;
+logic [7:0] ram_rd_data;
 
-assign dram_rd_data_a_o = dram_rd_data_a;
-assign dram_rd_data_b_o = dram_rd_data_b;
+assign iram_rd_data_o = iram_rd_data_a;
+assign dram_rd_data_o = dram_rd_data_a;
+
+assign ram_rd_data_o = ram_rd_data;
 
 ram8k iram(
     .clock(clk_i),
@@ -83,10 +84,10 @@ ram8k iram(
 ram40k dram(
     .clock(clk_i),
     .rdaddress(dram_rd_addr),
-    .wraddress(dram_wr_addr_i),
-    .byteena_a(dram_wr_byte_en_i),
-    .wren(dram_wr_en_i),
-    .data(dram_wr_data_i),
+    .wraddress(dram_wr_addr),
+    .byteena_a(dram_wr_byte_en),
+    .wren(dram_wr_en),
+    .data(dram_wr_data),
     .q(dram_rd_data_a)
 );
 
@@ -169,6 +170,15 @@ always_comb begin
             dram_rd_data_b = dram_rd_data_a[31:24];
         default:
             dram_rd_data_b = 8'h00;
+    endcase
+
+    case ({dram_rd_sel_i, iram_rd_sel_i})
+        2'b01:
+            ram_rd_data = iram_rd_data_b;
+        2'b10:
+            ram_rd_data = dram_rd_data_b;
+        default:
+            ram_rd_data = {XLEN{1'b0}};
     endcase
 end
 
