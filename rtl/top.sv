@@ -129,7 +129,7 @@ hxd32 #(
     .dram_rd_data_i(dram_rd_data_a),
 
     .iram_rd_addr_o(iram_rd_addr),
-    .dram_rd_addr_o(dram_rd_addr),
+    .dram_rd_addr_o(dram_rd_addr_a),
 
     .dram_wr_en_o(dram_wr_en),
     .dram_wr_addr_o(dram_wr_addr),
