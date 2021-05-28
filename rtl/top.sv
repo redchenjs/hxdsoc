@@ -5,58 +5,52 @@
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
-module corerv32(
+module hxdsoc(
     input logic clk_i,          // clk_i = 12 MHz
     input logic rst_n_i,        // rst_n_i, active low
 
     input logic dc_i,
+
     input logic spi_sclk_i,
     input logic spi_mosi_i,
     input logic spi_cs_n_i,
 
-    output logic [7:0] water_led_o,        // Optional, FPS Counter
-    output logic [8:0] segment_led_1_o,    // Optional, FPS Counter
-    output logic [8:0] segment_led_2_o     // Optional, FPS Counter
+    output logic spi_miso_o,
+
+    output logic [7:0] water_led_o,
+
+    output logic [8:0] segment_led_1_o,
+    output logic [8:0] segment_led_2_o
 );
 
-parameter W = 8;
-parameter N = 8;
+localparam XLEN = 32;
 
 logic sys_clk;
 logic sys_rst_n;
 
-logic       byte_rdy;
-logic [7:0] byte_data;
+logic iram_rw_sel;
+logic dram_rd_sel;
 
-logic [N-1:0] data_lsfr;
-logic         data_done;
+logic       spi_byte_vld;
+logic [7:0] spi_byte_data;
 
-logic clk_out;
+logic            iram_wr_en;
+logic [XLEN-1:0] iram_wr_addr;
+logic [XLEN-1:0] iram_wr_data;
 
-parameter XLEN = 32;
+logic [XLEN-1:0] iram_rd_addr;
+logic [XLEN-1:0] dram_rd_addr_a;
+logic [XLEN-1:0] dram_rd_addr_b;
 
-logic        ldr_iram_wr_en;
-logic        ldr_iram_wr_done;
-logic [12:0] ldr_iram_wr_addr;
-wire  [31:0] ldr_iram_wr_data = {byte_data, byte_data, byte_data, byte_data};
-logic [ 3:0] ldr_iram_wr_byte_en;
+logic [XLEN-1:0] iram_rd_data;
+logic [XLEN-1:0] dram_rd_data_a;
+logic      [7:0] dram_rd_data_b;
 
-logic            cpu_iram_rd_en;
-logic [XLEN-1:0] cpu_iram_addr;
-logic [XLEN-1:0] cpu_iram_data;
+logic            dram_wr_en;
+logic [XLEN-1:0] dram_wr_addr;
+logic [XLEN-1:0] dram_wr_data;
 
-logic            cpu_dram_rd_en;
-logic [XLEN-1:0] cpu_dram_rd_addr;
-logic [XLEN-1:0] cpu_dram_rd_data;
-
-logic            cpu_dram_wr_en;
-logic [XLEN-1:0] cpu_dram_wr_addr;
-logic [XLEN-1:0] cpu_dram_wr_data;
-logic      [3:0] cpu_dram_wr_byte_en;
-
-assign water_led_o = cpu_dram_wr_addr;
-
-sys_ctrl sys_ctrl(
+sys_ctl sys_ctl(
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 
@@ -68,104 +62,79 @@ spi_slave spi_slave(
     .clk_i(sys_clk),
     .rst_n_i(sys_rst_n),
 
+    .spi_byte_data_i(dram_rd_data_b),
+
     .spi_sclk_i(spi_sclk_i),
     .spi_mosi_i(spi_mosi_i),
     .spi_cs_n_i(spi_cs_n_i),
 
-    .byte_rdy_o(byte_rdy),
-    .byte_data_o(byte_data)
+    .spi_miso_o(spi_miso_o),
+
+    .spi_byte_vld_o(spi_byte_vld),
+    .spi_byte_data_o(spi_byte_data)
 );
 
-iram_loader iram_loader(
+ram_rw ram_rw(
     .clk_i(sys_clk),
     .rst_n_i(sys_rst_n),
-    
+
     .dc_i(dc_i),
 
-    .byte_rdy_i(byte_rdy),
-    .byte_data_i(byte_data),
+    .spi_byte_vld_i(spi_byte_vld),
+    .spi_byte_data_i(spi_byte_data),
 
-    .wr_en_o(ldr_iram_wr_en),
-    .wr_done_o(ldr_iram_wr_done),
-    .wr_addr_o(ldr_iram_wr_addr),
-    .wr_byte_en_o(ldr_iram_wr_byte_en)
+    .iram_rw_sel_o(iram_rw_sel),
+    .dram_rd_sel_o(dram_rd_sel),
+
+    .iram_wr_en_o(iram_wr_en),
+    .iram_wr_addr_o(iram_wr_addr),
+    .iram_wr_data_o(iram_wr_data),
+    
+    .dram_rd_addr_o(dram_rd_addr_b)
 );
 
-iram #(
+ram #(
     .XLEN(XLEN)
-) iram (
+) ram (
     .clk_i(sys_clk),
     .rst_n_i(sys_rst_n),
 
-    .wr_en_i(ldr_iram_wr_en),
-    .wr_addr_i(ldr_iram_wr_addr),
-    .wr_data_i(ldr_iram_wr_data),
-    .wr_byte_en_i(ldr_iram_wr_byte_en),
+    .iram_rw_sel_i(iram_rw_sel),
+    .dram_rd_sel_i(dram_rd_sel),
 
-    .rd_en_i(cpu_iram_rd_en),
-    .rd_addr_i(cpu_iram_rd_addr),
+    .iram_rd_addr_i(iram_rd_addr),
+    .dram_rd_addr_a_i(dram_rd_addr_a),
+    .dram_rd_addr_b_i(dram_rd_addr_b),
 
-    .rd_data_o(cpu_iram_rd_data)
+    .iram_wr_en_i(iram_wr_en),
+    .iram_wr_addr_i(iram_wr_addr),
+    .iram_wr_data_i(iram_wr_data),
+
+    .dram_wr_en_i(dram_wr_en),
+    .dram_wr_addr_i(dram_wr_addr),
+    .dram_wr_data_i(dram_wr_data),
+
+    .iram_rd_data_o(iram_rd_data),
+    .dram_rd_data_a_o(dram_rd_data_a),
+    .dram_rd_data_b_o(dram_rd_data_b)
 );
 
-dram #(
+hxd32 #(
     .XLEN(XLEN)
-) dram (
+) hxd32 (
     .clk_i(sys_clk),
     .rst_n_i(sys_rst_n),
 
-    .wr_en_i(cpu_dram_wr_en),
-    .wr_addr_i(cpu_dram_wr_addr),
-    .wr_data_i(cpu_dram_wr_data),
-    .wr_byte_en_i(cpu_dram_wr_byte_en),
+    .iram_rd_data_i(iram_rd_data),
+    .dram_rd_data_i(dram_rd_data_a),
 
-    .rd_en_i(cpu_dram_rd_en),
-    .rd_addr_i(cpu_dram_rd_addr),
+    .iram_rd_addr_o(iram_rd_addr),
+    .dram_rd_addr_o(dram_rd_addr),
 
-    .rd_data_o(cpu_dram_rd_data)
+    .dram_wr_en_o(dram_wr_en),
+    .dram_wr_addr_o(dram_wr_addr),
+    .dram_wr_data_o(dram_wr_data),
+    .dram_wr_byte_en_o(dram_wr_byte_en)
 );
-
-cpu #(
-    .XLEN(XLEN)
-) cpu (
-    .clk_i(sys_clk),
-    .rst_n_i(~ldr_iram_wr_done),
-
-    .iram_rd_data_i(cpu_iram_rd_data),
-    .dram_rd_data_i(cpu_dram_rd_data),
-
-    .iram_rd_en_o(cpu_iram_rd_en),
-    .iram_rd_addr_o(cpu_iram_rd_addr),
-
-    .dram_rd_en_o(cpu_dram_rd_en),
-    .dram_rd_addr_o(cpu_dram_rd_addr),
-
-    .dram_wr_en_o(cpu_dram_wr_en),
-    .dram_wr_addr_o(cpu_dram_wr_addr),
-    .dram_wr_data_o(cpu_dram_wr_data),
-    .dram_wr_byte_en_o(cpu_dram_wr_byte_en)
-);
-
-// clk_div #(
-//     .W(W)
-// ) clk_div (
-//     .clk_i(sys_clk),
-//     .rst_n_i(sys_rst_n),
-
-//     .div_i(2'h2),
-
-//     .clk_o(clk_out)
-// );
-
-// pulse_counter fps_counter(
-//     .clk_i(sys_clk),
-//     .rst_n_i(sys_rst_n),
-
-//     .pulse_i(clk_out),
-
-// //    .water_led_o(water_led_o),
-//     .segment_led_1_o(segment_led_1_o),
-//     .segment_led_2_o(segment_led_2_o)
-// );
 
 endmodule

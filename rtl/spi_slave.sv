@@ -9,56 +9,59 @@ module spi_slave(
     input logic clk_i,
     input logic rst_n_i,
 
+    input logic [7:0] spi_byte_data_i,
+
     input logic spi_sclk_i,
     input logic spi_mosi_i,
     input logic spi_cs_n_i,
 
-    output logic       byte_rdy_o,
-    output logic [7:0] byte_data_o
+    output logic spi_miso_o,
+
+    output logic       spi_byte_vld_o,
+    output logic [7:0] spi_byte_data_o
 );
 
-logic spi_cs;
 logic spi_sclk;
-logic spi_mosi;
-logic spi_rst_n;
 
 logic [2:0] bit_sel;
+logic       bit_mosi;
 
-logic       byte_rdy;
-logic [7:0] byte_data;
+logic byte_vld, byte_next;
 
-assign byte_rdy_o  = byte_rdy;
-assign byte_data_o = byte_data;
+logic [7:0] byte_mosi;
+logic [7:0] byte_miso;
 
-rst_sync spi_rst_n_sync(
+assign spi_miso_o      = byte_miso[7];
+assign spi_byte_vld_o  = byte_vld;
+assign spi_byte_data_o = byte_mosi;
+
+edge2en spi_sclk_en(
     .clk_i(clk_i),
-    .rst_n_i(rst_n_i & ~spi_cs_n_i),
-    .rst_n_o(spi_rst_n)
+    .rst_n_i(rst_n_i),
+    .data_i(spi_sclk_i),
+    .pos_edge_o(spi_sclk)
 );
 
-edge_detect spi_sclk_edge(
-   .clk_i(clk_i),
-   .rst_n_i(spi_rst_n),
-   .data_i(spi_sclk_i),
-   .pos_edge_o(spi_sclk)
-);
-
-always_ff @(posedge clk_i or negedge spi_rst_n)
+always_ff @(posedge clk_i or negedge rst_n_i)
 begin
-    if (!spi_rst_n) begin
-        spi_mosi <= 1'b0;
+    if (!rst_n_i) begin
+        bit_sel  <= 3'h0;
+        bit_mosi <= 1'b0;
 
-        bit_sel <= 3'h0;
+        byte_vld  <= 1'b0;
+        byte_next <= 1'b0;
 
-        byte_rdy  <= 1'b0;
-        byte_data <= 8'h00;
+        byte_mosi <= 8'h00;
+        byte_miso <= 8'h00;
     end else begin
-        spi_mosi <= spi_mosi_i;
+        bit_sel  <= spi_cs_n_i ? 3'h0 : bit_sel + spi_sclk;
+        bit_mosi <= spi_mosi_i;
 
-        bit_sel <= bit_sel + spi_sclk;
+        byte_vld  <= spi_sclk & (bit_sel == 3'h7);
+        byte_next <= byte_vld;
 
-        byte_rdy  <= spi_sclk & (bit_sel == 3'd7);
-        byte_data <= spi_sclk ? {byte_data[6:0], spi_mosi} : byte_data;
+        byte_mosi <= spi_sclk ? {byte_mosi[6:0], bit_mosi} : byte_mosi;
+        byte_miso <= byte_next ? spi_byte_data_i : (spi_sclk ? {byte_miso[6:0], 1'b0} : byte_miso);
     end
 end
 
