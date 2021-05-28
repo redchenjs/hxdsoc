@@ -103,7 +103,6 @@ set_location_assignment PIN_A3 -to segment_led_2_o[0]
 # ==========================
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 3.3V
 
 # Compiler Assignments
 # ====================
@@ -120,7 +119,7 @@ set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
 
 # Fitter Assignments
 # ==================
-set_global_assignment -name DEVICE 10M08SAM153C8G
+set_global_assignment -name DEVICE 10M08SCM153C8G
 set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 256
 
 # EDA Netlist Writer Assignments

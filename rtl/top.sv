@@ -58,11 +58,8 @@ logic [XLEN-1:0] dram_wr_addr;
 logic [XLEN-1:0] dram_wr_data;
 logic      [3:0] dram_wr_byte_en;
 
-logic [XLEN-1:0] iram_rd_data_a;
-logic      [7:0] iram_rd_data_b;
-
-logic [XLEN-1:0] dram_rd_data_a;
-logic      [7:0] dram_rd_data_b;
+logic [XLEN-1:0] iram_rd_data;
+logic [XLEN-1:0] dram_rd_data;
 
 sys_ctl sys_ctl(
     .clk_i(clk_i),

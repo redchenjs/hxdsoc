@@ -171,15 +171,22 @@ always_comb begin
         default:
             dram_rd_data_b = 8'h00;
     endcase
+end
 
-    case ({dram_rd_sel_i, iram_rd_sel_i})
-        2'b01:
-            ram_rd_data = iram_rd_data_b;
-        2'b10:
-            ram_rd_data = dram_rd_data_b;
-        default:
-            ram_rd_data = {XLEN{1'b0}};
-    endcase
+always_ff @(posedge clk_i or negedge rst_n_i)
+begin
+    if (!rst_n_i) begin
+        ram_rd_data <= {XLEN{1'b0}};
+    end else begin
+        case ({dram_rd_sel_i, iram_rd_sel_i})
+            2'b01:
+                ram_rd_data <= iram_rd_data_b;
+            2'b10:
+                ram_rd_data <= dram_rd_data_b;
+            default:
+                ram_rd_data <= {XLEN{1'b0}};
+        endcase
+    end
 end
 
 endmodule
