@@ -54,8 +54,6 @@ logic      [7:0] iram_rd_data_b;
 logic [XLEN-1:0] dram_rd_data_a;
 logic      [7:0] dram_rd_data_b;
 
-logic [7:0] ram_rd_data;
-
 wire iram_rw_en = (iram_rw_addr[31:17] == 15'h0000);
 
 wire dram_rd_en = (dram_rd_addr[31:17] == 15'h0001);
@@ -64,7 +62,7 @@ wire dram_wr_en = (dram_wr_addr[31:17] == 15'h0001);
 assign iram_rd_data_o = iram_rd_data_a;
 assign dram_rd_data_o = dram_rd_data_a;
 
-assign ram_rd_data_o = ram_rd_data;
+assign ram_rd_data_o = iram_rd_sel_i ? iram_rd_data_b : dram_rd_data_b;
 
 iram iram(
     .clka(clk_i),
@@ -95,9 +93,6 @@ dram dram(
 
 always_comb begin
     case ({iram_rd_sel_i, iram_wr_sel_i})
-        2'b00: begin
-            iram_rw_addr = iram_rd_addr_a_i;
-        end
         2'b01: begin
             iram_rw_addr = iram_wr_addr_i;
         end
@@ -105,17 +100,11 @@ always_comb begin
             iram_rw_addr = iram_rd_addr_b_i;
         end
         default: begin
-            iram_rw_addr = {XLEN{1'b0}};
+            iram_rw_addr = iram_rd_addr_a_i;
         end
     endcase
 
     case ({dram_rd_sel_i, dram_wr_sel_i})
-        2'b00: begin
-            dram_rd_addr    = dram_rd_addr_a_i;
-            dram_wr_addr    = dram_wr_addr_a_i;
-            dram_wr_data    = dram_wr_data_a_i;
-            dram_wr_byte_en = dram_wr_byte_en_a_i;
-        end
         2'b01: begin
             dram_rd_addr    = dram_rd_addr_a_i;
             dram_wr_addr    = dram_wr_addr_b_i;
@@ -129,10 +118,10 @@ always_comb begin
             dram_wr_byte_en = dram_wr_byte_en_a_i;
         end
         default: begin
-            dram_rd_addr    = {XLEN{1'b0}};
-            dram_wr_addr    = {XLEN{1'b0}};
-            dram_wr_data    = {XLEN{1'b0}};
-            dram_wr_byte_en = 4'b0000;
+            dram_rd_addr    = dram_rd_addr_a_i;
+            dram_wr_addr    = dram_wr_addr_a_i;
+            dram_wr_data    = dram_wr_data_a_i;
+            dram_wr_byte_en = dram_wr_byte_en_a_i;
         end
     endcase
 
@@ -161,22 +150,6 @@ always_comb begin
         default:
             dram_rd_data_b = 8'h00;
     endcase
-end
-
-always_ff @(posedge clk_i or negedge rst_n_i)
-begin
-    if (!rst_n_i) begin
-        ram_rd_data <= {XLEN{1'b0}};
-    end else begin
-        case ({dram_rd_sel_i, iram_rd_sel_i})
-            2'b01:
-                ram_rd_data <= iram_rd_data_b;
-            2'b10:
-                ram_rd_data <= dram_rd_data_b;
-            default:
-                ram_rd_data <= {XLEN{1'b0}};
-        endcase
-    end
 end
 
 endmodule

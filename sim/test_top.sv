@@ -202,6 +202,18 @@ always begin
 
     for (integer i = 0; i < 8; i++) begin
         #15 spi_sclk_i <= 1'b0;
+            spi_mosi_i <= 1'b1;
+        #15 spi_sclk_i <= 1'b1;
+    end
+
+    for (integer i = 0; i < 8; i++) begin
+        #15 spi_sclk_i <= 1'b0;
+            spi_mosi_i <= 1'b0;
+        #15 spi_sclk_i <= 1'b1;
+    end
+
+    for (integer i = 0; i < 4; i++) begin
+        #15 spi_sclk_i <= 1'b0;
             spi_mosi_i <= 1'b0;
         #15 spi_sclk_i <= 1'b1;
         #15 spi_sclk_i <= 1'b0;
@@ -209,7 +221,7 @@ always begin
         #15 spi_sclk_i <= 1'b1;
     end
 
-    for (integer i = 0; i < 8; i++) begin
+    for (integer i = 0; i < 4; i++) begin
         #15 spi_sclk_i <= 1'b0;
             spi_mosi_i <= 1'b1;
         #15 spi_sclk_i <= 1'b1;
@@ -302,6 +314,18 @@ always begin
 
     for (integer i = 0; i < 8; i++) begin
         #15 spi_sclk_i <= 1'b0;
+            spi_mosi_i <= 1'b1;
+        #15 spi_sclk_i <= 1'b1;
+    end
+
+    for (integer i = 0; i < 8; i++) begin
+        #15 spi_sclk_i <= 1'b0;
+            spi_mosi_i <= 1'b0;
+        #15 spi_sclk_i <= 1'b1;
+    end
+
+    for (integer i = 0; i < 4; i++) begin
+        #15 spi_sclk_i <= 1'b0;
             spi_mosi_i <= 1'b0;
         #15 spi_sclk_i <= 1'b1;
         #15 spi_sclk_i <= 1'b0;
@@ -309,7 +333,7 @@ always begin
         #15 spi_sclk_i <= 1'b1;
     end
 
-    for (integer i = 0; i < 8; i++) begin
+    for (integer i = 0; i < 4; i++) begin
         #15 spi_sclk_i <= 1'b0;
             spi_mosi_i <= 1'b1;
         #15 spi_sclk_i <= 1'b1;
