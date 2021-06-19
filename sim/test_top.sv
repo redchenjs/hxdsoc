@@ -29,7 +29,6 @@ logic iram_wr_sel;
 logic dram_rd_sel;
 logic dram_wr_sel;
 
-logic       spi_byte_rdy;
 logic       spi_byte_vld;
 logic [7:0] spi_byte_data;
 
@@ -51,7 +50,6 @@ spi_slave spi_slave(
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 
-    .spi_byte_rdy_i(spi_byte_rdy),
     .spi_byte_data_i(ram_rd_data),
 
     .spi_sclk_i(spi_sclk_i),
@@ -82,8 +80,6 @@ ram_rw #(
 
     .dram_rd_sel_o(dram_rd_sel),
     .dram_wr_sel_o(dram_wr_sel),
-
-    .spi_byte_rdy_o(spi_byte_rdy),
 
     .ram_rw_addr_o(ram_rw_addr),
     .ram_wr_byte_en_o(ram_wr_byte_en)

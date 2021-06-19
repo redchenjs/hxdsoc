@@ -24,8 +24,6 @@ module ram_rw #(
     output logic dram_wr_sel_o,
     output logic dram_rd_sel_o,
 
-    output logic spi_byte_rdy_o,
-
     output logic [XLEN-1:0] ram_rw_addr_o,
     output logic      [3:0] ram_wr_byte_en_o
 );
@@ -50,9 +48,6 @@ logic iram_wr_sel;
 logic dram_rd_sel;
 logic dram_wr_sel;
 
-logic [1:0] spi_byte_rdy;
-
-logic      [3:0] ram_wr_sel;
 logic [XLEN-1:0] ram_rw_addr;
 logic      [3:0] ram_wr_byte_en;
 
@@ -64,17 +59,15 @@ assign iram_wr_sel_o = iram_wr_sel;
 assign dram_rd_sel_o = dram_rd_sel;
 assign dram_wr_sel_o = dram_wr_sel;
 
-assign spi_byte_rdy_o = spi_byte_rdy[1];
-
 assign ram_rw_addr_o    = ram_rw_addr;
-assign ram_wr_byte_en_o = ram_wr_byte_en;
+assign ram_wr_byte_en_o = ram_wr_byte_en & {4{spi_byte_vld_i & dc_i}};
+
+assign ram_rd_en = iram_rd_sel | dram_rd_sel;
+assign ram_wr_en = iram_wr_sel | dram_wr_sel;
 
 always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
-        ram_rd_en <= 1'b0;
-        ram_wr_en <= 1'b0;
-
         cpu_rst_n <= 1'b0;
 
         iram_rd_sel <= 1'b0;
@@ -83,19 +76,11 @@ begin
         dram_rd_sel <= 1'b0;
         dram_wr_sel <= 1'b0;
 
-        spi_byte_rdy <= 2'b00;
-
-        ram_wr_sel  <= 4'b0000;
         ram_rw_addr <= 32'h0000_0000;
         ram_wr_byte_en <= 4'b0000;
     end else begin
-        spi_byte_rdy <= {spi_byte_rdy[0], spi_byte_vld_i};
-
         if (spi_byte_vld_i) begin
             if (!dc_i) begin  // Command
-                ram_rd_en <= 1'b0;
-                ram_wr_en <= 1'b0;
-
                 case (spi_byte_data_i)
                     CPU_RST: begin
                         cpu_rst_n <= 1'b0;
@@ -106,8 +91,8 @@ begin
                         dram_rd_sel <= 1'b0;
                         dram_wr_sel <= 1'b0;
 
-                        ram_wr_sel  <= 4'b0000;
                         ram_rw_addr <= 32'h0000_0000;
+                        ram_wr_byte_en <= 4'b0000;
                     end
                     CPU_RUN: begin
                         cpu_rst_n <= 1'b1;
@@ -118,8 +103,8 @@ begin
                         dram_rd_sel <= 1'b0;
                         dram_wr_sel <= 1'b0;
 
-                        ram_wr_sel  <= 4'b0000;
                         ram_rw_addr <= 32'h0000_0000;
+                        ram_wr_byte_en <= 4'b0000;
                     end
                     IRAM_WR: begin
                         cpu_rst_n <= 1'b0;
@@ -130,8 +115,8 @@ begin
                         dram_rd_sel <= 1'b0;
                         dram_wr_sel <= 1'b0;
 
-                        ram_wr_sel  <= 4'b0001;
                         ram_rw_addr <= 32'h0000_0000;
+                        ram_wr_byte_en <= 4'b0001;
                     end
                     IRAM_RD: begin
                         cpu_rst_n <= 1'b0;
@@ -142,8 +127,8 @@ begin
                         dram_rd_sel <= 1'b0;
                         dram_wr_sel <= 1'b0;
 
-                        ram_wr_sel  <= 4'b0000;
                         ram_rw_addr <= 32'h0000_0000;
+                        ram_wr_byte_en <= 4'b0000;
                     end
                     DRAM_WR: begin
                         cpu_rst_n <= 1'b0;
@@ -154,8 +139,8 @@ begin
                         dram_rd_sel <= 1'b0;
                         dram_wr_sel <= 1'b1;
 
-                        ram_wr_sel  <= 4'b0001;
                         ram_rw_addr <= 32'h0002_0000;
+                        ram_wr_byte_en <= 4'b0001;
                     end
                     DRAM_RD: begin
                         cpu_rst_n <= 1'b0;
@@ -166,8 +151,8 @@ begin
                         dram_rd_sel <= 1'b1;
                         dram_wr_sel <= 1'b0;
 
-                        ram_wr_sel  <= 4'b0000;
                         ram_rw_addr <= 32'h0002_0000;
+                        ram_wr_byte_en <= 4'b0000;
                     end
                     default: begin
                         cpu_rst_n <= 1'b0;
@@ -178,14 +163,11 @@ begin
                         dram_rd_sel <= 1'b0;
                         dram_wr_sel <= 1'b0;
 
-                        ram_wr_sel  <= 4'b0000;
                         ram_rw_addr <= 32'h0000_0000;
+                        ram_wr_byte_en <= 4'b0000;
                     end
                 endcase
             end else begin    // Data
-                ram_rd_en <= iram_rd_sel | dram_rd_sel;
-                ram_wr_en <= iram_wr_sel | dram_wr_sel;
-
                 cpu_rst_n <= cpu_rst_n;
 
                 iram_rd_sel <= iram_rd_sel;
@@ -194,12 +176,10 @@ begin
                 dram_rd_sel <= dram_rd_sel;
                 dram_wr_sel <= dram_wr_sel;
 
-                ram_wr_sel  <= {ram_wr_sel[2:0], ram_wr_sel[3]};
                 ram_rw_addr <= ram_rw_addr + (ram_rd_en | ram_wr_en);
+                ram_wr_byte_en <= {ram_wr_byte_en[2:0], ram_wr_byte_en[3]};
             end
         end
-
-        ram_wr_byte_en <= ram_wr_sel & {4{spi_byte_vld_i & dc_i}};
     end
 end
 
