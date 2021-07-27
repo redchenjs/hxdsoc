@@ -1,11 +1,11 @@
 /*
- * top.sv
+ * cmod_a7.sv
  *
  *  Created on: 2020-07-19 17:33
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
-module hxdsoc(
+module cmod_a7(
     input logic clk_i,          // clk_i = 12 MHz
     input logic rst_n_i,        // rst_n_i, active low
 
