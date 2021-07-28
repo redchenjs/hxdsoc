@@ -12,15 +12,15 @@ module test_uart;
 logic clk_i;
 logic rst_n_i;
 
+logic [7:0] uart_tx_data_i;
 logic       uart_tx_data_vld_i;
-
 
 logic [31:0] uart_tx_baud_div_i;
 
 logic uart_tx_o;
-logic uart_tx_byte_rdy_o;
+logic uart_tx_data_rdy_o;
 
-logic uart_rx_byte_rdy_i;
+logic uart_rx_data_rdy_i;
 
 logic [31:0] uart_rx_baud_div_i;
 
@@ -39,7 +39,7 @@ uart_tx uart_tx(
     .uart_tx_baud_div_i(uart_tx_baud_div_i),
 
     .uart_tx_o(uart_tx_o),
-    .uart_tx_byte_rdy_o(uart_tx_byte_rdy_o)
+    .uart_tx_data_rdy_o(uart_tx_data_rdy_o)
 );
 
 uart_rx uart_rx(
@@ -47,7 +47,7 @@ uart_rx uart_rx(
     .rst_n_i(rst_n_i),
 
     .uart_rx_i(uart_tx_o),
-    .uart_rx_byte_rdy_i(uart_rx_byte_rdy_i),
+    .uart_rx_data_rdy_i(uart_rx_data_rdy_i),
 
     .uart_rx_baud_div_i(uart_rx_baud_div_i),
 
@@ -65,17 +65,17 @@ uart_tx uart_tx_2(
     .uart_tx_baud_div_i(uart_tx_baud_div_i),
 
     .uart_tx_o(uart_tx_2_o),
-    .uart_tx_byte_rdy_o(uart_rx_byte_rdy_i)
+    .uart_tx_data_rdy_o(uart_rx_data_rdy_i)
 );
 
 always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
-        uart_tx_data_vld_i  <= 1'b1;
-        uart_tx_data_i <= 8'h61;
+        uart_tx_data_i     <= 8'h61;
+        uart_tx_data_vld_i <= 1'b1;
     end else begin
-        uart_tx_data_vld_i  <= uart_tx_data_vld_i & uart_tx_byte_rdy_o ? 1'b0 : 1'b1;
-        uart_tx_data_i <= uart_tx_data_vld_i & uart_tx_byte_rdy_o ? uart_tx_data_i + 1'b1 : uart_tx_data_i;
+        uart_tx_data_i     <= uart_tx_data_vld_i & uart_tx_data_rdy_o ? uart_tx_data_i + 1'b1 : uart_tx_data_i;
+        uart_tx_data_vld_i <= uart_tx_data_vld_i & uart_tx_data_rdy_o ? 1'b0 : 1'b1;
     end
 end
 
@@ -83,8 +83,8 @@ initial begin
     clk_i   <= 1'b1;
     rst_n_i <= 1'b0;
 
-    uart_tx_baud_div_i <= 32'd434;
-    uart_rx_baud_div_i <= 32'd434;
+    uart_tx_baud_div_i <= 32'd100;
+    uart_rx_baud_div_i <= 32'd100;
 
     #2 rst_n_i <= 1'b1;
 end
