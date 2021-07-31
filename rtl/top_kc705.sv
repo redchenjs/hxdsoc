@@ -84,7 +84,7 @@ uart_rx uart_rx(
     .uart_rx_i(uart_rx_i),
     .uart_rx_data_rdy_i(uart_rx_data_rdy),
 
-    .uart_rx_baud_div_i(32'd215),
+    .uart_rx_baud_div_i(32'd107),
 
     .uart_rx_data_o(uart_rx_data),
     .uart_rx_data_vld_o(uart_rx_data_vld)
@@ -97,7 +97,7 @@ uart_tx uart_tx(
    .uart_tx_data_i(uart_tx_data),
    .uart_tx_data_vld_i(uart_tx_data_vld),
 
-   .uart_tx_baud_div_i(32'd215),
+   .uart_tx_baud_div_i(32'd107),
 
    .uart_tx_o(uart_tx_o),
    .uart_tx_data_rdy_o(uart_tx_data_rdy)
