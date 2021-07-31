@@ -29,7 +29,6 @@ state_t rx_sta;
 
 logic uart_rx_n;
 
-logic        clk_r;
 logic        clk_s;
 logic [31:0] clk_cnt;
 
@@ -67,13 +66,11 @@ end
 always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
-        clk_r   <= 1'b0;
         clk_s   <= 1'b0;
         clk_cnt <= 32'h0000_0000;
     end else begin
-        clk_r   <= (rx_sta == IDLE) & uart_rx_n;
         clk_s   <= (clk_cnt == uart_rx_baud_div_i);
-        clk_cnt <= clk_r ? uart_rx_baud_div_i[31:1] : ((rx_sta == IDLE) | clk_s ? 32'h0000_0000 : clk_cnt + 1'b1);
+        clk_cnt <= (rx_sta == IDLE) & uart_rx_n ? uart_rx_baud_div_i[31:1] : ((rx_sta == IDLE) | clk_s ? 32'h0000_0000 : clk_cnt + 1'b1);
     end
 end
 
@@ -91,13 +88,13 @@ begin
     end else begin
         case (rx_sta)
             IDLE:
-                rx_sta <= clk_r ? START : rx_sta;
+                rx_sta <= uart_rx_n ? START : rx_sta;
             START:
                 rx_sta <= clk_s ? DATA : rx_sta;
             DATA:
                 rx_sta <= clk_s & (bit_sel == 3'h7) ? STOP : rx_sta;
             STOP:
-                rx_sta <= clk_s ? (clk_r ? START : IDLE) : rx_sta;
+                rx_sta <= clk_s ? IDLE : rx_sta;
             default:
                 rx_sta <= IDLE;
         endcase

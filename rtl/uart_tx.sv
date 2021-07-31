@@ -36,7 +36,7 @@ logic [7:0] bit_sft;
 logic bit_data;
 
 logic sta_idle;
-logic sta_data;
+logic sta_busy;
 
 logic [7:0] tx_data;
 logic       tx_data_vld;
@@ -64,7 +64,7 @@ begin
         tx_data_rdy <= 1'b0;
     end else begin
         tx_data     <= uart_tx_data_vld_i & ~tx_data_vld ? uart_tx_data_i : tx_data;
-        tx_data_vld <= uart_tx_data_vld_i & ~tx_data_vld ? 1'b1 : (sta_data ? 1'b0 : tx_data_vld);
+        tx_data_vld <= uart_tx_data_vld_i & ~tx_data_vld ? 1'b1 : (sta_busy ? 1'b0 : tx_data_vld);
         tx_data_rdy <= uart_tx_data_vld_i & tx_data_rdy ? 1'b0 : (sta_idle ? 1'b1 : tx_data_rdy);
     end
 end
@@ -80,7 +80,7 @@ begin
         bit_data <= 1'b1;
 
         sta_idle <= 1'b1;
-        sta_data <= 1'b0;
+        sta_busy <= 1'b0;
     end else begin
         case (tx_sta)
             IDLE:
@@ -109,7 +109,7 @@ begin
         bit_data <= bit_sft[0] | (tx_sta == IDLE) | (tx_sta == STOP);
 
         sta_idle <= clk_s & (tx_sta == STOP);
-        sta_data <= clk_s & (tx_sta == START);
+        sta_busy <= clk_s & (tx_sta == START);
     end
 end
 

@@ -11,19 +11,21 @@ module ram_rw #(
     input logic clk_i,
     input logic rst_n_i,
 
-    input logic dc_i,
+    input logic uart_tx_data_rdy_i,
 
-    input logic       spi_byte_vld_i,
-    input logic [7:0] spi_byte_data_i,
+    input logic [7:0] uart_rx_data_i,
+    input logic       uart_rx_data_vld_i,
+
+    input logic [7:0] ram_rd_data_i,
 
     output logic cpu_rst_n_o,
 
-    output logic iram_wr_sel_o,
-    output logic iram_rd_sel_o,
+    output logic [7:0] uart_tx_data_o,
+    output logic       uart_tx_data_vld_o,
 
-    output logic dram_wr_sel_o,
-    output logic dram_rd_sel_o,
+    output logic uart_rx_data_rdy_o,
 
+    output logic            ram_rw_sel_o,
     output logic [XLEN-1:0] ram_rw_addr_o,
     output logic      [3:0] ram_wr_byte_en_o
 );
@@ -31,154 +33,248 @@ module ram_rw #(
 typedef enum logic [7:0] {
     CPU_RST = 8'h2a,
     CPU_RUN = 8'h2b,
-    IRAM_WR = 8'h2c,
-    IRAM_RD = 8'h2d,
-    DRAM_WR = 8'h2e,
-    DRAM_RD = 8'h2f
-} cmd_t;
+    CONF_WR = 8'h2c,
+    CONF_RD = 8'h2d,
+    DATA_WR = 8'h2e,
+    DATA_RD = 8'h2f
+} cmd_en_t;
+
+logic cpu_rst_n;
+
+logic cfg_rd_en;
+logic cfg_wr_en;
 
 logic ram_rd_en;
 logic ram_wr_en;
 
-logic cpu_rst_n;
+logic rx_data_vld;
+logic rx_data_rdy;
 
-logic iram_rd_sel;
-logic iram_wr_sel;
+logic [7:0] tx_data;
+logic       tx_data_vld;
+logic       tx_data_rdy;
 
-logic dram_rd_sel;
-logic dram_wr_sel;
+logic            cmd_en;
+logic [XLEN-1:0] cmd_cnt;
 
 logic [XLEN-1:0] ram_rw_addr;
+logic [XLEN-1:0] ram_rw_size;
+
+logic [XLEN-1:0] ram_rd_cnt;
+logic [XLEN-1:0] ram_rd_addr;
+
+logic [XLEN-1:0] ram_wr_cnt;
+logic [XLEN-1:0] ram_wr_addr;
 logic      [3:0] ram_wr_byte_en;
 
 assign cpu_rst_n_o = cpu_rst_n;
 
-assign iram_rd_sel_o = iram_rd_sel;
-assign iram_wr_sel_o = iram_wr_sel;
+assign uart_tx_data_o     = tx_data;
+assign uart_tx_data_vld_o = tx_data_vld;
 
-assign dram_rd_sel_o = dram_rd_sel;
-assign dram_wr_sel_o = dram_wr_sel;
+assign uart_rx_data_rdy_o = rx_data_rdy;
 
-assign ram_rw_addr_o    = ram_rw_addr;
-assign ram_wr_byte_en_o = ram_wr_byte_en & {4{spi_byte_vld_i & dc_i}};
+assign ram_rw_sel_o     = ram_rd_en | ram_wr_en;
+assign ram_rw_addr_o    = ram_rd_en ? ram_rd_addr : ram_wr_addr;
+assign ram_wr_byte_en_o = ram_wr_byte_en & {4{rx_data_vld & ~cmd_en}};
 
-assign ram_rd_en = iram_rd_sel | dram_rd_sel;
-assign ram_wr_en = iram_wr_sel | dram_wr_sel;
+edge2en rx_data_vld_en(
+    .clk_i(clk_i),
+    .rst_n_i(rst_n_i),
+    .data_i(uart_rx_data_vld_i),
+    .pos_edge_o(rx_data_vld)
+);
+
+edge2en tx_data_rdy_en(
+    .clk_i(clk_i),
+    .rst_n_i(rst_n_i),
+    .data_i((cfg_rd_en | ram_rd_en) & uart_tx_data_rdy_i),
+    .pos_edge_o(tx_data_rdy)
+);
 
 always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
+        rx_data_rdy <= 1'b0;
+    end else begin
+        rx_data_rdy <= rx_data_vld ? 1'b1 : (~uart_rx_data_vld_i ? 1'b0 : rx_data_rdy);
+    end
+end
+
+always_ff @(posedge clk_i or negedge rst_n_i)
+begin
+    if (!rst_n_i) begin
+        tx_data     <= 8'h00;
+        tx_data_vld <= 1'b0;
+
+        ram_rd_cnt  <= 32'h0000_0000;
+        ram_rd_addr <= 32'h0000_0000;
+    end else begin
+        if (tx_data_rdy) begin
+            if (cfg_rd_en) begin
+                case (ram_rd_cnt[2:0])
+                    3'h0:
+                        tx_data <= ram_rw_addr[7:0];
+                    3'h1:
+                        tx_data <= ram_rw_addr[15:8];
+                    3'h2:
+                        tx_data <= ram_rw_addr[23:16];
+                    3'h3:
+                        tx_data <= ram_rw_addr[31:24];
+                    3'h4:
+                        tx_data <= ram_rw_size[7:0];
+                    3'h5:
+                        tx_data <= ram_rw_size[15:8];
+                    3'h6:
+                        tx_data <= ram_rw_size[23:16];
+                    3'h7:
+                        tx_data <= ram_rw_size[31:24];
+                endcase
+            end else if (ram_rd_en) begin
+                tx_data <= ram_rd_data_i;
+            end
+
+            tx_data_vld <= 1'b1;
+
+            ram_rd_cnt  <= (ram_rd_cnt == cmd_cnt) ? 32'h0000_0000 : ram_rd_cnt + 1'b1;
+            ram_rd_addr <= ram_rw_addr + ram_rd_cnt;
+        end else begin
+            tx_data_vld <= uart_tx_data_rdy_i ? 1'b0 : tx_data_vld;
+        end
+    end
+end
+
+always_ff @(posedge clk_i or negedge rst_n_i)
+begin
+    if (!rst_n_i) begin
+        cmd_en  <= 1'b1;
+        cmd_cnt <= 32'h0000_0000;
+
         cpu_rst_n <= 1'b0;
 
-        iram_rd_sel <= 1'b0;
-        iram_wr_sel <= 1'b0;
+        cfg_wr_en <= 1'b0;
+        cfg_rd_en <= 1'b0;
 
-        dram_rd_sel <= 1'b0;
-        dram_wr_sel <= 1'b0;
+        ram_wr_en <= 1'b0;
+        ram_rd_en <= 1'b0;
 
         ram_rw_addr <= 32'h0000_0000;
+        ram_rw_size <= 32'h0000_0000;
+
+        ram_wr_cnt     <= 32'h0000_0000;
+        ram_wr_addr    <= 32'h0000_0000;
         ram_wr_byte_en <= 4'b0000;
     end else begin
-        if (spi_byte_vld_i) begin
-            if (!dc_i) begin  // Command
-                case (spi_byte_data_i)
+        if (rx_data_vld) begin
+            if (cmd_en) begin  // Command
+                case (uart_rx_data_i)
                     CPU_RST: begin
+                        cmd_en <= 1'b1;
+
                         cpu_rst_n <= 1'b0;
 
-                        iram_rd_sel <= 1'b0;
-                        iram_wr_sel <= 1'b0;
+                        cfg_wr_en <= 1'b0;
+                        cfg_rd_en <= 1'b0;
 
-                        dram_rd_sel <= 1'b0;
-                        dram_wr_sel <= 1'b0;
-
-                        ram_rw_addr <= 32'h0000_0000;
-                        ram_wr_byte_en <= 4'b0000;
+                        ram_wr_en <= 1'b0;
+                        ram_rd_en <= 1'b0;
                     end
                     CPU_RUN: begin
+                        cmd_en <= 1'b1;
+
                         cpu_rst_n <= 1'b1;
 
-                        iram_rd_sel <= 1'b0;
-                        iram_wr_sel <= 1'b0;
+                        cfg_wr_en <= 1'b0;
+                        cfg_rd_en <= 1'b0;
 
-                        dram_rd_sel <= 1'b0;
-                        dram_wr_sel <= 1'b0;
-
-                        ram_rw_addr <= 32'h0000_0000;
-                        ram_wr_byte_en <= 4'b0000;
+                        ram_wr_en <= 1'b0;
+                        ram_rd_en <= 1'b0;
                     end
-                    IRAM_WR: begin
+                    CONF_WR: begin
+                        cmd_en <= 1'b0;
+
                         cpu_rst_n <= 1'b0;
 
-                        iram_rd_sel <= 1'b0;
-                        iram_wr_sel <= 1'b1;
+                        cfg_wr_en <= 1'b1;
+                        cfg_rd_en <= 1'b0;
 
-                        dram_rd_sel <= 1'b0;
-                        dram_wr_sel <= 1'b0;
-
-                        ram_rw_addr <= 32'h0000_0000;
-                        ram_wr_byte_en <= 4'b0001;
+                        ram_wr_en <= 1'b0;
+                        ram_rd_en <= 1'b0;
                     end
-                    IRAM_RD: begin
+                    CONF_RD: begin
+                        cmd_en <= 1'b0;
+
                         cpu_rst_n <= 1'b0;
 
-                        iram_rd_sel <= 1'b1;
-                        iram_wr_sel <= 1'b0;
+                        cfg_wr_en <= 1'b0;
+                        cfg_rd_en <= 1'b1;
 
-                        dram_rd_sel <= 1'b0;
-                        dram_wr_sel <= 1'b0;
-
-                        ram_rw_addr <= 32'h0000_0000;
-                        ram_wr_byte_en <= 4'b0000;
+                        ram_wr_en <= 1'b0;
+                        ram_rd_en <= 1'b0;
                     end
-                    DRAM_WR: begin
+                    DATA_WR: begin
+                        cmd_en <= 1'b0;
+
                         cpu_rst_n <= 1'b0;
 
-                        iram_rd_sel <= 1'b0;
-                        iram_wr_sel <= 1'b0;
+                        cfg_wr_en <= 1'b0;
+                        cfg_rd_en <= 1'b0;
 
-                        dram_rd_sel <= 1'b0;
-                        dram_wr_sel <= 1'b1;
-
-                        ram_rw_addr <= 32'h0002_0000;
-                        ram_wr_byte_en <= 4'b0001;
+                        ram_wr_en <= 1'b1;
+                        ram_rd_en <= 1'b0;
                     end
-                    DRAM_RD: begin
+                    DATA_RD: begin
+                        cmd_en <= 1'b0;
+
                         cpu_rst_n <= 1'b0;
 
-                        iram_rd_sel <= 1'b0;
-                        iram_wr_sel <= 1'b0;
+                        cfg_wr_en <= 1'b0;
+                        cfg_rd_en <= 1'b0;
 
-                        dram_rd_sel <= 1'b1;
-                        dram_wr_sel <= 1'b0;
-
-                        ram_rw_addr <= 32'h0002_0000;
-                        ram_wr_byte_en <= 4'b0000;
-                    end
-                    default: begin
-                        cpu_rst_n <= 1'b0;
-
-                        iram_rd_sel <= 1'b0;
-                        iram_wr_sel <= 1'b0;
-
-                        dram_rd_sel <= 1'b0;
-                        dram_wr_sel <= 1'b0;
-
-                        ram_rw_addr <= 32'h0000_0000;
-                        ram_wr_byte_en <= 4'b0000;
+                        ram_wr_en <= 1'b0;
+                        ram_rd_en <= 1'b1;
                     end
                 endcase
+
+                ram_wr_cnt     <= 8'h00;
+                ram_wr_addr    <= 32'h0000_0000;
+                ram_wr_byte_en <= 4'b0001;
             end else begin    // Data
-                cpu_rst_n <= cpu_rst_n;
+                cmd_en <= (ram_wr_cnt == cmd_cnt) ? 1'b1 : cmd_en;
 
-                iram_rd_sel <= iram_rd_sel;
-                iram_wr_sel <= iram_wr_sel;
+                cfg_wr_en <= (ram_wr_cnt == cmd_cnt) ? 1'b0 : cfg_wr_en;
+                ram_wr_en <= (ram_wr_cnt == cmd_cnt) ? 1'b0 : ram_wr_en;
 
-                dram_rd_sel <= dram_rd_sel;
-                dram_wr_sel <= dram_wr_sel;
+                if (cfg_wr_en) begin
+                    case (ram_wr_cnt[2:0])
+                        3'h0:
+                            ram_rw_addr[7:0] <= uart_rx_data_i;
+                        3'h1:
+                            ram_rw_addr[15:8] <= uart_rx_data_i;
+                        3'h2:
+                            ram_rw_addr[23:16] <= uart_rx_data_i;
+                        3'h3:
+                            ram_rw_addr[31:24] <= uart_rx_data_i;
+                        3'h4:
+                            ram_rw_size[7:0] <= uart_rx_data_i;
+                        3'h5:
+                            ram_rw_size[15:8] <= uart_rx_data_i;
+                        3'h6:
+                            ram_rw_size[23:16] <= uart_rx_data_i;
+                        3'h7:
+                            ram_rw_size[31:24] <= uart_rx_data_i;
+                    endcase
+                end
 
-                ram_rw_addr <= ram_rw_addr + (ram_rd_en | ram_wr_en);
+                ram_wr_cnt     <= (ram_wr_cnt == cmd_cnt) ? 32'h0000_0000 : ram_wr_cnt + $unsigned(cfg_wr_en | (ram_wr_en & ram_wr_byte_en[3]));
+                ram_wr_addr    <= ram_rw_addr + ram_wr_cnt;
                 ram_wr_byte_en <= {ram_wr_byte_en[2:0], ram_wr_byte_en[3]};
             end
+        end else begin
+            cmd_cnt <= (cfg_wr_en | cfg_rd_en) ? 3'h7 : ram_rw_size;
+
+            cfg_rd_en <= tx_data_rdy & (ram_rd_cnt == cmd_cnt) ? 1'b0 : cfg_rd_en;
+            ram_rd_en <= tx_data_rdy & (ram_rd_cnt == cmd_cnt) ? 1'b0 : ram_rd_en;
         end
     end
 end
