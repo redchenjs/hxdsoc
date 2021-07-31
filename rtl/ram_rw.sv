@@ -271,10 +271,11 @@ begin
                 ram_wr_byte_en <= {ram_wr_byte_en[2:0], ram_wr_byte_en[3]};
             end
         end else begin
+            cmd_en  <= (ram_rd_cnt == cmd_cnt) & tx_data_rdy ? 1'b1 : cmd_en;
             cmd_cnt <= (cfg_wr_en | cfg_rd_en) ? 3'h7 : ram_rw_size;
 
-            cfg_rd_en <= tx_data_rdy & (ram_rd_cnt == cmd_cnt) ? 1'b0 : cfg_rd_en;
-            ram_rd_en <= tx_data_rdy & (ram_rd_cnt == cmd_cnt) ? 1'b0 : ram_rd_en;
+            cfg_rd_en <= (ram_rd_cnt == cmd_cnt) & tx_data_rdy ? 1'b0 : cfg_rd_en;
+            ram_rd_en <= (ram_rd_cnt == cmd_cnt) & tx_data_rdy ? 1'b0 : ram_rd_en;
         end
     end
 end
