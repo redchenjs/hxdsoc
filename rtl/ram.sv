@@ -11,29 +11,17 @@ module ram #(
     input logic clk_i,
     input logic rst_n_i,
 
-    input logic iram_rd_sel_i,
-    input logic iram_wr_sel_i,
+    input logic            ram_rw_sel_i,
+    input logic [XLEN-1:0] ram_rw_addr_i,
+    input logic [XLEN-1:0] ram_wr_data_i,
+    input logic      [3:0] ram_wr_byte_en_i,
 
-    input logic dram_rd_sel_i,
-    input logic dram_wr_sel_i,
+    input logic [XLEN-1:0] iram_rd_addr_i,
 
-    input logic [XLEN-1:0] iram_rd_addr_a_i,
-    input logic [XLEN-1:0] iram_rd_addr_b_i,
-
-    input logic [XLEN-1:0] dram_rd_addr_a_i,
-    input logic [XLEN-1:0] dram_rd_addr_b_i,
-
-    input logic [XLEN-1:0] iram_wr_addr_i,
-    input logic [XLEN-1:0] iram_wr_data_i,
-    input logic      [3:0] iram_wr_byte_en_i,
-
-    input logic [XLEN-1:0] dram_wr_addr_a_i,
-    input logic [XLEN-1:0] dram_wr_data_a_i,
-    input logic      [3:0] dram_wr_byte_en_a_i,
-
-    input logic [XLEN-1:0] dram_wr_addr_b_i,
-    input logic [XLEN-1:0] dram_wr_data_b_i,
-    input logic      [3:0] dram_wr_byte_en_b_i,
+    input logic [XLEN-1:0] dram_rd_addr_i,
+    input logic [XLEN-1:0] dram_wr_addr_i,
+    input logic [XLEN-1:0] dram_wr_data_i,
+    input logic      [3:0] dram_wr_byte_en_i,
 
     output logic [XLEN-1:0] iram_rd_data_o,
     output logic [XLEN-1:0] dram_rd_data_o,
@@ -48,35 +36,34 @@ logic [XLEN-1:0] dram_wr_addr;
 logic [XLEN-1:0] dram_wr_data;
 logic      [3:0] dram_wr_byte_en;
 
-logic [XLEN-1:0] iram_rd_data_a;
-logic      [7:0] iram_rd_data_b;
+logic [XLEN-1:0] iram_rd_data;
+logic [XLEN-1:0] dram_rd_data;
 
-logic [XLEN-1:0] dram_rd_data_a;
-logic      [7:0] dram_rd_data_b;
+logic [7:0] ram_rd_data;
 
 wire iram_rw_en = (iram_rw_addr[31:17] == 15'h0000);
 
 wire dram_rd_en = (dram_rd_addr[31:17] == 15'h0001);
 wire dram_wr_en = (dram_wr_addr[31:17] == 15'h0001);
 
-assign iram_rd_data_o = iram_rd_data_a;
-assign dram_rd_data_o = dram_rd_data_a;
+assign iram_rd_data_o = iram_rd_data;
+assign dram_rd_data_o = dram_rd_data;
 
-assign ram_rd_data_o = iram_rd_sel_i ? iram_rd_data_b : dram_rd_data_b;
+assign ram_rd_data_o = ram_rd_data;
 
 iram iram(
     .clka(clk_i),
     .ena(iram_rw_en),
-    .wea(iram_wr_byte_en_i[3:2]),
+    .wea(ram_wr_byte_en_i[3:2]),
     .addra({iram_rw_addr[16:2], 1'b1}),
-    .dina(iram_wr_data_i[31:16]),
-    .douta(iram_rd_data_a[31:16]),
+    .dina(ram_wr_data_i[31:16]),
+    .douta(iram_rd_data[31:16]),
     .clkb(clk_i),
     .enb(iram_rw_en),
-    .web(iram_wr_byte_en_i[1:0]),
+    .web(ram_wr_byte_en_i[1:0]),
     .addrb({iram_rw_addr[16:2], 1'b0}),
-    .dinb(iram_wr_data_i[15:0]),
-    .doutb(iram_rd_data_a[15:0])
+    .dinb(ram_wr_data_i[15:0]),
+    .doutb(iram_rd_data[15:0])
 );
 
 dram dram(
@@ -88,67 +75,37 @@ dram dram(
     .clkb(clk_i),
     .enb(dram_rd_en),
     .addrb(dram_rd_addr[16:2]),
-    .doutb(dram_rd_data_a)
+    .doutb(dram_rd_data)
 );
 
 always_comb begin
-    case ({iram_rd_sel_i, iram_wr_sel_i})
-        2'b01: begin
-            iram_rw_addr = iram_wr_addr_i;
-        end
-        2'b10: begin
-            iram_rw_addr = iram_rd_addr_b_i;
-        end
-        default: begin
-            iram_rw_addr = iram_rd_addr_a_i;
-        end
-    endcase
+    if (ram_rw_sel_i) begin
+        iram_rw_addr    = ram_rw_addr_i;
 
-    case ({dram_rd_sel_i, dram_wr_sel_i})
-        2'b01: begin
-            dram_rd_addr    = dram_rd_addr_a_i;
-            dram_wr_addr    = dram_wr_addr_b_i;
-            dram_wr_data    = dram_wr_data_b_i;
-            dram_wr_byte_en = dram_wr_byte_en_b_i;
-        end
-        2'b10: begin
-            dram_rd_addr    = dram_rd_addr_b_i;
-            dram_wr_addr    = dram_wr_addr_a_i;
-            dram_wr_data    = dram_wr_data_a_i;
-            dram_wr_byte_en = dram_wr_byte_en_a_i;
-        end
-        default: begin
-            dram_rd_addr    = dram_rd_addr_a_i;
-            dram_wr_addr    = dram_wr_addr_a_i;
-            dram_wr_data    = dram_wr_data_a_i;
-            dram_wr_byte_en = dram_wr_byte_en_a_i;
-        end
-    endcase
+        dram_rd_addr    = ram_rw_addr_i;
+        dram_wr_addr    = ram_rw_addr_i;
+        dram_wr_data    = ram_wr_data_i;
+        dram_wr_byte_en = ram_wr_byte_en_i;
+    end else begin
+        iram_rw_addr    = iram_rd_addr_i;
 
-    case (iram_rw_addr[1:0])
+        dram_rd_addr    = dram_rd_addr_i;
+        dram_wr_addr    = dram_wr_addr_i;
+        dram_wr_data    = dram_wr_data_i;
+        dram_wr_byte_en = dram_wr_byte_en_i;
+    end
+
+    case (ram_rw_addr_i[1:0])
         2'b00:
-            iram_rd_data_b = iram_rd_data_a[7:0];
+            ram_rd_data = iram_rw_en ? iram_rd_data[7:0] : dram_rd_data[7:0];
         2'b01:
-            iram_rd_data_b = iram_rd_data_a[15:8];
+            ram_rd_data = iram_rw_en ? iram_rd_data[15:8] : dram_rd_data[15:8];
         2'b10:
-            iram_rd_data_b = iram_rd_data_a[23:16];
+            ram_rd_data = iram_rw_en ? iram_rd_data[23:16] : dram_rd_data[23:16];
         2'b11:
-            iram_rd_data_b = iram_rd_data_a[31:24];
+            ram_rd_data = iram_rw_en ? iram_rd_data[31:24] : dram_rd_data[31:24];
         default:
-            iram_rd_data_b = 8'h00;
-    endcase
-
-    case (dram_rd_addr[1:0])
-        2'b00:
-            dram_rd_data_b = dram_rd_data_a[7:0];
-        2'b01:
-            dram_rd_data_b = dram_rd_data_a[15:8];
-        2'b10:
-            dram_rd_data_b = dram_rd_data_a[23:16];
-        2'b11:
-            dram_rd_data_b = dram_rd_data_a[31:24];
-        default:
-            dram_rd_data_b = 8'h00;
+            ram_rd_data = 8'h00;
     endcase
 end
 

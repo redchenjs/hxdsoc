@@ -43,8 +43,8 @@ logic      [7:0] ram_rd_data;
 logic      [3:0] ram_wr_byte_en;
 
 logic [XLEN-1:0] iram_rd_addr;
-logic [XLEN-1:0] dram_rd_addr;
 
+logic [XLEN-1:0] dram_rd_addr;
 logic [XLEN-1:0] dram_wr_addr;
 logic [XLEN-1:0] dram_wr_data;
 logic      [3:0] dram_wr_byte_en;
@@ -56,10 +56,10 @@ assign gpio_led_o[7] = sys_rst_n;
 assign gpio_led_o[6] = cpu_rst_n;
 assign gpio_led_o[5] = ram_rw_sel;
 assign gpio_led_o[4] = 1'b0;
-assign gpio_led_o[3] = 1'b0;
-assign gpio_led_o[2] = 1'b0;
-assign gpio_led_o[1] = 1'b0;
-assign gpio_led_o[0] = 1'b0;
+assign gpio_led_o[3] = uart_rx_data_vld;
+assign gpio_led_o[2] = uart_rx_data_rdy;
+assign gpio_led_o[1] = uart_tx_data_vld;
+assign gpio_led_o[0] = uart_tx_data_rdy;
 
 assign sm_fan_pwm_o = cpu_rst_n;
 
@@ -134,29 +134,17 @@ ram #(
     .clk_i(sys_clk),
     .rst_n_i(sys_rst_n),
 
-    .iram_rd_sel_i(ram_rw_sel),
-    .iram_wr_sel_i(ram_rw_sel),
+    .ram_rw_sel_i(ram_rw_sel),
+    .ram_rw_addr_i(ram_rw_addr),
+    .ram_wr_data_i({uart_rx_data, uart_rx_data, uart_rx_data, uart_rx_data}),
+    .ram_wr_byte_en_i(ram_wr_byte_en),
 
-    .dram_rd_sel_i(ram_rw_sel),
-    .dram_wr_sel_i(ram_rw_sel),
+    .iram_rd_addr_i(iram_rd_addr),
 
-    .iram_rd_addr_a_i(iram_rd_addr),
-    .iram_rd_addr_b_i(ram_rw_addr),
-
-    .dram_rd_addr_a_i(dram_rd_addr),
-    .dram_rd_addr_b_i(ram_rw_addr),
-
-    .iram_wr_addr_i(ram_rw_addr),
-    .iram_wr_data_i({uart_rx_data, uart_rx_data, uart_rx_data, uart_rx_data}),
-    .iram_wr_byte_en_i(ram_wr_byte_en),
-
-    .dram_wr_addr_a_i(dram_wr_addr),
-    .dram_wr_data_a_i(dram_wr_data),
-    .dram_wr_byte_en_a_i(dram_wr_byte_en),
-
-    .dram_wr_addr_b_i(ram_rw_addr),
-    .dram_wr_data_b_i({uart_rx_data, uart_rx_data, uart_rx_data, uart_rx_data}),
-    .dram_wr_byte_en_b_i(ram_wr_byte_en),
+    .dram_rd_addr_i(dram_rd_addr),
+    .dram_wr_addr_i(dram_wr_addr),
+    .dram_wr_data_i(dram_wr_data),
+    .dram_wr_byte_en_i(dram_wr_byte_en),
 
     .iram_rd_data_o(iram_rd_data),
     .dram_rd_data_o(dram_rd_data),

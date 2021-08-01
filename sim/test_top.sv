@@ -11,34 +11,49 @@ module test_top;
 
 localparam XLEN = 32;
 
+typedef enum logic [7:0] {
+    CPU_RST = 8'h2a,
+    CPU_RUN = 8'h2b,
+    CONF_WR = 8'h2c,
+    CONF_RD = 8'h2d,
+    DATA_WR = 8'h2e,
+    DATA_RD = 8'h2f
+} cmd_t;
+
 logic clk_i;
 logic rst_n_i;
 
-logic dc_i;
+wire sys_clk   = clk_i;
+wire sys_rst_n = rst_n_i;
 
-logic spi_sclk_i;
-logic spi_mosi_i;
-logic spi_cs_n_i;
-logic spi_miso_o;
+logic uart_rx_i;
+logic uart_tx_o;
+
+logic [7:0] uart_tx_data_i;
+logic       uart_tx_data_vld_i;
+logic       uart_tx_data_rdy_o;
+
+logic            uart_tx_data_st;
+logic [XLEN-1:0] uart_tx_data_cnt;
 
 logic cpu_rst_n;
 
-logic iram_rd_sel;
-logic iram_wr_sel;
+logic [7:0] uart_rx_data;
+logic       uart_rx_data_vld;
+logic       uart_rx_data_rdy;
 
-logic dram_rd_sel;
-logic dram_wr_sel;
+logic [7:0] uart_tx_data;
+logic       uart_tx_data_vld;
+logic       uart_tx_data_rdy;
 
-logic       spi_byte_vld;
-logic [7:0] spi_byte_data;
-
+logic            ram_rw_sel;
 logic [XLEN-1:0] ram_rw_addr;
 logic      [7:0] ram_rd_data;
 logic      [3:0] ram_wr_byte_en;
 
 logic [XLEN-1:0] iram_rd_addr;
-logic [XLEN-1:0] dram_rd_addr;
 
+logic [XLEN-1:0] dram_rd_addr;
 logic [XLEN-1:0] dram_wr_addr;
 logic [XLEN-1:0] dram_wr_data;
 logic      [3:0] dram_wr_byte_en;
@@ -46,74 +61,96 @@ logic      [3:0] dram_wr_byte_en;
 logic [XLEN-1:0] iram_rd_data;
 logic [XLEN-1:0] dram_rd_data;
 
-spi_slave spi_slave(
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
+logic [7:0] cmd_table[] = '{
+    CPU_RST,
+    CPU_RUN,
+    CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h04, 8'h00, 8'h00, 8'h00,
+    // CONF_RD,
+    DATA_WR, 8'haa, 8'hbb, 8'hcc, 8'hdd, 8'hee,
+    DATA_RD
+};
 
-    .spi_byte_data_i(ram_rd_data),
+uart_tx data_gen(
+    .clk_i(sys_clk),
+    .rst_n_i(sys_rst_n),
 
-    .spi_sclk_i(spi_sclk_i),
-    .spi_mosi_i(spi_mosi_i),
-    .spi_cs_n_i(spi_cs_n_i),
+    .uart_tx_data_i(uart_tx_data_i),
+    .uart_tx_data_vld_i(uart_tx_data_vld_i),
 
-    .spi_miso_o(spi_miso_o),
+    .uart_tx_baud_div_i(32'd107),
 
-    .spi_byte_vld_o(spi_byte_vld),
-    .spi_byte_data_o(spi_byte_data)
+    .uart_tx_o(uart_rx_i),
+    .uart_tx_data_rdy_o(uart_tx_data_rdy_o)
+);
+
+uart_rx uart_rx(
+    .clk_i(sys_clk),
+    .rst_n_i(sys_rst_n),
+
+    .uart_rx_i(uart_rx_i),
+    .uart_rx_data_rdy_i(uart_rx_data_rdy),
+
+    .uart_rx_baud_div_i(32'd107),
+
+    .uart_rx_data_o(uart_rx_data),
+    .uart_rx_data_vld_o(uart_rx_data_vld)
+);
+
+uart_tx uart_tx(
+   .clk_i(sys_clk),
+   .rst_n_i(sys_rst_n),
+
+   .uart_tx_data_i(uart_tx_data),
+   .uart_tx_data_vld_i(uart_tx_data_vld),
+
+   .uart_tx_baud_div_i(32'd107),
+
+   .uart_tx_o(uart_tx_o),
+   .uart_tx_data_rdy_o(uart_tx_data_rdy)
 );
 
 ram_rw #(
     .XLEN(XLEN)
 ) ram_rw (
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
+    .clk_i(sys_clk),
+    .rst_n_i(sys_rst_n),
 
-    .dc_i(dc_i),
+    .uart_tx_data_rdy_i(uart_tx_data_rdy),
 
-    .spi_byte_vld_i(spi_byte_vld),
-    .spi_byte_data_i(spi_byte_data),
+    .uart_rx_data_i(uart_rx_data),
+    .uart_rx_data_vld_i(uart_rx_data_vld),
+
+    .ram_rd_data_i(ram_rd_data),
 
     .cpu_rst_n_o(cpu_rst_n),
 
-    .iram_rd_sel_o(iram_rd_sel),
-    .iram_wr_sel_o(iram_wr_sel),
-
-    .dram_rd_sel_o(dram_rd_sel),
-    .dram_wr_sel_o(dram_wr_sel),
-
+    .ram_rw_sel_o(ram_rw_sel),
     .ram_rw_addr_o(ram_rw_addr),
-    .ram_wr_byte_en_o(ram_wr_byte_en)
+    .ram_wr_byte_en_o(ram_wr_byte_en),
+
+    .uart_rx_data_rdy_o(uart_rx_data_rdy),
+
+    .uart_tx_data_o(uart_tx_data),
+    .uart_tx_data_vld_o(uart_tx_data_vld)
 );
 
 ram #(
     .XLEN(XLEN)
 ) ram (
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
+    .clk_i(sys_clk),
+    .rst_n_i(sys_rst_n),
 
-    .iram_rd_sel_i(iram_rd_sel),
-    .iram_wr_sel_i(iram_wr_sel),
+    .ram_rw_sel_i(ram_rw_sel),
+    .ram_rw_addr_i(ram_rw_addr),
+    .ram_wr_data_i({uart_rx_data, uart_rx_data, uart_rx_data, uart_rx_data}),
+    .ram_wr_byte_en_i(ram_wr_byte_en),
 
-    .dram_rd_sel_i(dram_rd_sel),
-    .dram_wr_sel_i(dram_wr_sel),
+    .iram_rd_addr_i(iram_rd_addr),
 
-    .iram_rd_addr_a_i(iram_rd_addr),
-    .iram_rd_addr_b_i(ram_rw_addr),
-
-    .dram_rd_addr_a_i(dram_rd_addr),
-    .dram_rd_addr_b_i(ram_rw_addr),
-
-    .iram_wr_addr_i(ram_rw_addr),
-    .iram_wr_data_i({spi_byte_data, spi_byte_data, spi_byte_data, spi_byte_data}),
-    .iram_wr_byte_en_i(ram_wr_byte_en),
-
-    .dram_wr_addr_a_i(dram_wr_addr),
-    .dram_wr_data_a_i(dram_wr_data),
-    .dram_wr_byte_en_a_i(dram_wr_byte_en),
-
-    .dram_wr_addr_b_i(ram_rw_addr),
-    .dram_wr_data_b_i({spi_byte_data, spi_byte_data, spi_byte_data, spi_byte_data}),
-    .dram_wr_byte_en_b_i(ram_wr_byte_en),
+    .dram_rd_addr_i(dram_rd_addr),
+    .dram_wr_addr_i(dram_wr_addr),
+    .dram_wr_data_i(dram_wr_data),
+    .dram_wr_byte_en_i(dram_wr_byte_en),
 
     .iram_rd_data_o(iram_rd_data),
     .dram_rd_data_o(dram_rd_data),
@@ -124,7 +161,7 @@ ram #(
 hxd32 #(
     .XLEN(XLEN)
 ) hxd32 (
-    .clk_i(clk_i),
+    .clk_i(sys_clk),
     .rst_n_i(cpu_rst_n),
 
     .iram_rd_data_i(iram_rd_data),
@@ -142,12 +179,6 @@ initial begin
     clk_i   <= 1'b1;
     rst_n_i <= 1'b0;
 
-    dc_i <= 1'b0;
-
-    spi_cs_n_i <= 1'b1;
-    spi_sclk_i <= 1'b0;
-    spi_mosi_i <= 1'b0;
-
     #2 rst_n_i <= 1'b1;
 end
 
@@ -155,240 +186,34 @@ always begin
     #2.5 clk_i <= ~clk_i;
 end
 
+edge2en uart_tx_data_st_en(
+    .clk_i(clk_i),
+    .rst_n_i(rst_n_i),
+    .data_i(uart_tx_data_rdy_o),
+    .pos_edge_o(uart_tx_data_st)
+);
+
+always_ff @(posedge clk_i or negedge rst_n_i)
+begin
+    if (!rst_n_i) begin
+        uart_tx_data_i     <= 8'h00;
+        uart_tx_data_vld_i <= 1'b0;
+
+        uart_tx_data_cnt <= 32'h0000_0000;
+    end else begin
+        if (uart_tx_data_st) begin
+            uart_tx_data_i     <= (uart_tx_data_cnt < $size(cmd_table)) ? cmd_table[uart_tx_data_cnt] : 8'h00;
+            uart_tx_data_vld_i <= (uart_tx_data_cnt < $size(cmd_table)) ? 1'b1 : 1'b0;
+
+            uart_tx_data_cnt <= uart_tx_data_cnt + 1'b1;
+        end else begin
+            uart_tx_data_vld_i <= uart_tx_data_rdy_o ? 1'b0 : uart_tx_data_vld_i;
+        end
+    end
+end
+
 always begin
-    #50 spi_cs_n_i <= 1'b0;
-
-    // IRAM_WR
-    #20 dc_i <= 1'b0;
-
-    // 0x2C
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT7
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT6
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT5
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT4
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT3
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT2
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT1
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT0
-    #15 spi_sclk_i <= 1'b1;
-
-    #20 dc_i <= 1'b1;
-
-    for (integer i = 0; i < 8; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    for (integer i = 0; i < 8; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b0;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    for (integer i = 0; i < 4; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b0;
-        #15 spi_sclk_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    for (integer i = 0; i < 4; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b0;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    // IRAM_RD
-    #20 dc_i <= 1'b0;
-
-    // 0x2D
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT7
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT6
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT5
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT4
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT3
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT2
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT1
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT0
-    #15 spi_sclk_i <= 1'b1;
-
-    #20 dc_i <= 1'b1;
-
-    for (integer i = 0; i < 32; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b0;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    // DRAM_WR
-    #20 dc_i <= 1'b0;
-
-    // 0x2E
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT7
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT6
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT5
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT4
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT3
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT2
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT1
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT0
-    #15 spi_sclk_i <= 1'b1;
-
-    #20 dc_i <= 1'b1;
-
-    for (integer i = 0; i < 8; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    for (integer i = 0; i < 8; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b0;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    for (integer i = 0; i < 4; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b0;
-        #15 spi_sclk_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    for (integer i = 0; i < 4; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b1;
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b0;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    // DRAM_RD
-    #20 dc_i <= 1'b0;
-
-    // 0x2F
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT7
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT6
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT5
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b0;  // BIT4
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT3
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT2
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT1
-    #15 spi_sclk_i <= 1'b1;
-
-    #15 spi_sclk_i <= 1'b0;
-        spi_mosi_i <= 1'b1;  // BIT0
-    #15 spi_sclk_i <= 1'b1;
-
-    #20 dc_i <= 1'b1;
-
-    for (integer i = 0; i < 32; i++) begin
-        #15 spi_sclk_i <= 1'b0;
-            spi_mosi_i <= 1'b0;
-        #15 spi_sclk_i <= 1'b1;
-    end
-
-    #20 dc_i <= 1'b0;
-
-    #15 spi_sclk_i <= 1'b0;
-
-    #25 spi_cs_n_i <= 1'b1;
-
-    #75 rst_n_i <= 1'b0;
+    #750000 rst_n_i <= 1'b0;
     #25 $stop;
 end
 
