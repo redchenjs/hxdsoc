@@ -41,10 +41,10 @@ logic [XLEN-1:0] dram_rd_data;
 
 logic [7:0] ram_rd_data;
 
-wire iram_rw_en = (iram_rw_addr[31:17] == 15'h0000);
+wire iram_rw_en = (iram_rw_addr[31:16] == 16'h0000);
 
-wire dram_rd_en = (dram_rd_addr[31:17] == 15'h0001);
-wire dram_wr_en = (dram_wr_addr[31:17] == 15'h0001);
+wire dram_rd_en = (dram_rd_addr[31:16] == 16'h1000);
+wire dram_wr_en = (dram_wr_addr[31:16] == 16'h1000);
 
 assign iram_rd_data_o = iram_rd_data;
 assign dram_rd_data_o = dram_rd_data;
@@ -55,13 +55,13 @@ iram iram(
     .clka(clk_i),
     .ena(iram_rw_en),
     .wea(ram_wr_byte_en_i[3:2]),
-    .addra({iram_rw_addr[16:2], 1'b1}),
+    .addra({iram_rw_addr[15:2], 1'b1}),
     .dina(ram_wr_data_i[31:16]),
     .douta(iram_rd_data[31:16]),
     .clkb(clk_i),
     .enb(iram_rw_en),
     .web(ram_wr_byte_en_i[1:0]),
-    .addrb({iram_rw_addr[16:2], 1'b0}),
+    .addrb({iram_rw_addr[15:2], 1'b0}),
     .dinb(ram_wr_data_i[15:0]),
     .doutb(iram_rd_data[15:0])
 );
@@ -70,11 +70,11 @@ dram dram(
     .clka(clk_i),
     .ena(dram_wr_en),
     .wea(dram_wr_byte_en),
-    .addra(dram_wr_addr[16:2]),
+    .addra(dram_wr_addr[15:2]),
     .dina(dram_wr_data),
     .clkb(clk_i),
     .enb(dram_rd_en),
-    .addrb(dram_rd_addr[16:2]),
+    .addrb(dram_rd_addr[15:2]),
     .doutb(dram_rd_data)
 );
 
@@ -97,13 +97,13 @@ always_comb begin
 
     case (ram_rw_addr_i[1:0])
         2'b00:
-            ram_rd_data = iram_rw_en ? iram_rd_data[7:0] : dram_rd_data[7:0];
+            ram_rd_data = iram_rw_en ? iram_rd_data[7:0] : (dram_rd_en ? dram_rd_data[7:0] : 8'h00);
         2'b01:
-            ram_rd_data = iram_rw_en ? iram_rd_data[15:8] : dram_rd_data[15:8];
+            ram_rd_data = iram_rw_en ? iram_rd_data[15:8] : (dram_rd_en ? dram_rd_data[15:8] : 8'h00);
         2'b10:
-            ram_rd_data = iram_rw_en ? iram_rd_data[23:16] : dram_rd_data[23:16];
+            ram_rd_data = iram_rw_en ? iram_rd_data[23:16] : (dram_rd_en ? dram_rd_data[23:16] : 8'h00);
         2'b11:
-            ram_rd_data = iram_rw_en ? iram_rd_data[31:24] : dram_rd_data[31:24];
+            ram_rd_data = iram_rw_en ? iram_rd_data[31:24] : (dram_rd_en ? dram_rd_data[31:24] : 8'h00);
         default:
             ram_rd_data = 8'h00;
     endcase
