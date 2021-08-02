@@ -63,11 +63,16 @@ logic [XLEN-1:0] dram_rd_data;
 
 logic [7:0] cmd_table[] = '{
     CPU_RST,
-    CPU_RUN,
-    CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h04, 8'h00, 8'h00, 8'h00,
+    CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h0f, 8'h00, 8'h00, 8'h00,
     // CONF_RD,
-    DATA_WR, 8'haa, 8'hbb, 8'hcc, 8'hdd, 8'hee,
-    DATA_RD
+    // DATA_WR, 8'haa, 8'hbb, 8'hcc, 8'hdd, 8'hee,
+    // DATA_RD
+    DATA_WR,
+    8'h93, 8'h00, 8'hf0, 8'h0d,
+    8'h37, 8'h01, 8'h00, 8'h10,
+    8'h13, 8'h01, 8'h01, 8'h00,
+    8'h23, 8'h20, 8'h11, 8'h00,
+    CPU_RUN
 };
 
 uart_tx data_gen(

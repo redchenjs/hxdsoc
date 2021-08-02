@@ -69,19 +69,6 @@ IBUFGDS clk_buf(
     .IB(sys_clk_n_i)
 );
 
-ila ila(
-    .clk(sys_clk_i),
-
-    .probe0(iram_rd_addr),
-    .probe1(iram_rd_data),
-    .probe2(dram_rd_addr),
-    .probe3(dram_rd_data),
-    .probe4(dram_wr_addr),
-    .probe5(dram_wr_data),
-    .probe6(dram_wr_byte_en),
-    .probe7(cpu_rst_n)
-);
-
 sys_ctl sys_ctl(
     .clk_i(sys_clk_i),
     .rst_n_i(~cpu_rst_i),
