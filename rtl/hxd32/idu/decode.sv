@@ -122,7 +122,7 @@ assign alu_b_sel_o = alu_b_sel;
 assign alu_comp_sel_o = funct3;
 
 assign alu_op_0_sel_o = inst_data_i[30] & ((opcode_op & (funct3 == ALU_OP_1_ADD)) | (funct3 == ALU_OP_1_SRL));
-assign alu_op_1_sel_o = funct3;
+assign alu_op_1_sel_o = opcode_store ? 3'b000 : funct3;
 
 assign dram_wr_en_o  = opcode_store;
 assign dram_wr_sel_o = funct3;
@@ -139,8 +139,8 @@ always_comb begin
             imm = {{20{imm_i[11] & ~funct3[2]}}, imm_i};
         end
         OPCODE_STORE: begin
-            alu_a_sel = ALU_A_ZERO;
-            alu_b_sel = ALU_B_ZERO;
+            alu_a_sel = ALU_A_RS1;
+            alu_b_sel = ALU_B_IMM;
 
             imm = {{20{imm_s[11]}}, imm_s};
         end
