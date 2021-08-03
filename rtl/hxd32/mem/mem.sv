@@ -19,20 +19,16 @@ module mem #(
     output logic [3:0] dram_wr_byte_en_o
 );
 
-logic [3:0] dram_wr_byte_en;
-
-assign dram_wr_byte_en_o = dram_wr_byte_en;
-
 always_comb begin
     case ({~dram_wr_en_i, dram_wr_sel_i})
         DRAM_WR_B:
-            dram_wr_byte_en = 4'b0001;
+            dram_wr_byte_en_o = 4'b0001;
         DRAM_WR_H:
-            dram_wr_byte_en = 4'b0011;
+            dram_wr_byte_en_o = 4'b0011;
         DRAM_WR_W:
-            dram_wr_byte_en = 4'b1111;
+            dram_wr_byte_en_o = 4'b1111;
         default:
-            dram_wr_byte_en = 4'b0000;
+            dram_wr_byte_en_o = 4'b0000;
     endcase
 end
 
