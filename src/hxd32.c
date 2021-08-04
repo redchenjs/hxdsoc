@@ -116,6 +116,7 @@ int main(int argc, char *argv[])
     uint32_t addr = 0x00000000;
     uint32_t size = 0x00000000;
     uint32_t data = 0x00000000;
+    uint32_t count = 0x00000000;
 
     if ((sfd = open(port, O_RDWR | O_NOCTTY)) < 0) {
         printf("failed to open port: %s\n", port);
@@ -203,11 +204,16 @@ int main(int argc, char *argv[])
 
     lseek(bfd, 0x10, SEEK_SET);
 
+    stat(dramfile, &st);
+    size = st.st_size;
+
     read(bfd, &data, 4);
-    while (data != 0xdeadbeef) {
+    count = 0;
+    while (data != 0xdeadbeef && count < size) {
         snprintf(data_str, sizeof(data_str), "%08x\n", data);
         write(tfd, data_str, strlen(data_str));
         read(bfd, &data, 4);
+        count += 4;
     }
 
     // diff
@@ -217,7 +223,7 @@ int main(int argc, char *argv[])
     char *temp_str_0 = malloc(10);
     char *temp_str_1 = malloc(10);
     char *output_str = malloc(40);
-    size_t count = 0;
+    count = 0;
     while (read(rfd, temp_str_0, 9)) {
         read(tfd, temp_str_1, 9);
 
