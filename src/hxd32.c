@@ -62,6 +62,22 @@ void conf_rd(int sfd, uint32_t *addr, uint32_t *size)
     *size = recv_buff[1];
 }
 
+void zero_mem(int sfd, uint32_t size)
+{
+    uint8_t read_buff = 0;
+    uint8_t send_buff[] = {0x2e};
+
+    write(sfd, send_buff, sizeof(send_buff));
+
+    for (int i = 0; i < size; i++) {
+        write(sfd, &read_buff, 1);
+
+        printf(">> ZERO: %d%%\r", i * 100 / size);
+    }
+
+    printf("=> ZERO: 100%%\n");
+}
+
 void data_wr(int sfd, int ifd, uint32_t size)
 {
     uint8_t read_buff = 0;
@@ -78,7 +94,7 @@ void data_wr(int sfd, int ifd, uint32_t size)
         printf(">> SENT: %d%%\r", i * 100 / size);
     }
 
-    printf(">> SENT: 100%%\n");
+    printf("=> SENT: 100%%\n");
 }
 
 void data_rd(int sfd, int ofd, uint32_t size)
@@ -97,7 +113,7 @@ void data_rd(int sfd, int ofd, uint32_t size)
         printf("<< RECV: %d%%\r", i * 100 / size);
     }
 
-    printf("<< RECV: 100%%\n");
+    printf("<= RECV: 100%%\n");
 }
 
 int main(int argc, char *argv[])
@@ -179,6 +195,10 @@ int main(int argc, char *argv[])
     // cpu reset
     cpu_rst(sfd);
 
+    // clear iram
+    conf_wr(sfd, 0x00000000, 0x00010000 - 1);
+    zero_mem(sfd, 0x00010000);
+
     stat(iramfile, &st);
     size = st.st_size;
 
@@ -196,23 +216,22 @@ int main(int argc, char *argv[])
     // cpu run
     cpu_run(sfd);
 
-    sleep(2);
-
-    // read dram
-    conf_wr(sfd, 0x10000000, 0xbff);
-    data_rd(sfd, bfd, 0xbff);
-
-    lseek(bfd, 0x10, SEEK_SET);
+    sleep(1);
 
     stat(dramfile, &st);
     size = st.st_size;
 
-    read(bfd, &data, 4);
+    // read dram
+    conf_wr(sfd, 0x10000000, size);
+    data_rd(sfd, bfd, size);
+
+    lseek(bfd, 0x10, SEEK_SET);
+
     count = 0;
-    while (data != 0xdeadbeef && count < size) {
+    while (count < size) {
+        read(bfd, &data, 4);
         snprintf(data_str, sizeof(data_str), "%08x\n", data);
         write(tfd, data_str, strlen(data_str));
-        read(bfd, &data, 4);
         count += 4;
     }
 
