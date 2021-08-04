@@ -124,7 +124,7 @@ idu #(
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 
-    .pc_next_i(pc_next),
+    .pc_next_i(pc_next_r),
 
     .alu_comp_i(alu_comp),
     .alu_data_i(alu_data),
@@ -207,7 +207,7 @@ exu #(
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 
-    .pc_data_i(pc_data),
+    .pc_data_i(pc_data_r),
 
     .rs1_rd_data_i(rs1_rd_data),
     .rs2_rd_data_i(rs2_rd_data),
