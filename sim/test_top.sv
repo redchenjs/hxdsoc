@@ -68,9 +68,9 @@ logic [7:0] cmd_table[] = '{
     // DATA_WR, 8'haa, 8'hbb, 8'hcc, 8'hdd, 8'hee,
     // DATA_RD
     DATA_WR,
-    8'h93, 8'h0f, 8'h70, 8'hff,
-    8'h93, 8'hdc, 8'h9f, 8'h40,
-    8'h23, 8'h20, 8'h92, 8'h01,
+    8'hb7, 8'h0e, 8'h00, 8'h40,
+    8'h93, 8'hb8, 8'h7e, 8'hff,
+    8'h23, 8'h26, 8'h11, 8'h01,
     CPU_RUN
 };
 

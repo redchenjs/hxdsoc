@@ -182,7 +182,7 @@ always_comb begin
             alu_a_sel = ALU_A_RS1;
             alu_b_sel = ALU_B_IMM;
 
-            imm = {{20{imm_i[11] & ~(funct3 == 3'b011)}}, imm_i};
+            imm = {{20{imm_i[11]}}, imm_i};
         end
         OPCODE_OP: begin
             alu_a_sel = ALU_A_RS1;
