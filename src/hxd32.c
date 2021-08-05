@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
     size = st.st_size;
 
     // read dram
-    conf_wr(sfd, 0x10000000, size);
+    conf_wr(sfd, 0x10000000, size - 1);
     data_rd(sfd, bfd, size);
 
     lseek(bfd, 0x10, SEEK_SET);
