@@ -98,6 +98,8 @@ wire [11:0] imm_b = {inst_data_i[31], inst_data_i[7], inst_data_i[30:25], inst_d
 wire [19:0] imm_u = {inst_data_i[31:12]};
 wire [19:0] imm_j = {inst_data_i[31], inst_data_i[19:12], inst_data_i[20], inst_data_i[30:21]};
 
+logic alu_op_0_sel;
+
 logic [1:0] alu_a_sel;
 logic [1:0] alu_b_sel;
 
@@ -121,7 +123,7 @@ assign alu_b_sel_o = alu_b_sel;
 
 assign alu_comp_sel_o = funct3;
 
-assign alu_op_0_sel_o = (opcode_op & ((funct3 == ALU_OP_1_ADD) | (funct3 == ALU_OP_1_SRL))) & inst_data_i[30];
+assign alu_op_0_sel_o = alu_op_0_sel;
 assign alu_op_1_sel_o = (opcode_op | opcode_op_imm) ? funct3 : 3'b000;
 
 assign dram_wr_en_o  = opcode_store;
@@ -129,6 +131,20 @@ assign dram_wr_sel_o = funct3;
 assign dram_rd_sel_o = funct3;
 
 assign imm_rd_data_o = imm;
+
+always_comb begin
+    case (funct3)
+        ALU_OP_1_ADD: begin
+            alu_op_0_sel = inst_data_i[30] & opcode_op;
+        end
+        ALU_OP_1_SRL: begin
+            alu_op_0_sel = inst_data_i[30] & (opcode_op | opcode_op_imm);
+        end
+        default: begin
+            alu_op_0_sel = 1'b0;
+        end
+    endcase
+end
 
 always_comb begin
     case (opcode)

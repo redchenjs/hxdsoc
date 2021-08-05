@@ -30,7 +30,7 @@ logic [XLEN-1:0] alu_data;
 
 wire res_beq  = (alu_a_data_i == alu_b_data_i) ? 1'b1 : 1'b0;
 wire res_bne  = ~res_beq;
-wire res_blt  = ($signed(alu_a_data_i) < $signed(alu_b_data_i)) ? 1'b1 : 1'b0;
+wire res_blt  = (signed'(alu_a_data_i) < signed'(alu_b_data_i)) ? 1'b1 : 1'b0;
 wire res_bge  = ~res_blt;
 wire res_bltu = (alu_a_data_i < alu_b_data_i) ? 1'b1 : 1'b0;
 wire res_bgeu = ~res_bltu;
@@ -42,7 +42,7 @@ wire [XLEN-1:0] res_or   = alu_a_data_i | alu_b_data_i;
 wire [XLEN-1:0] res_xor  = alu_a_data_i ^ alu_b_data_i;
 wire [XLEN-1:0] res_sll  = alu_a_data_i << alu_b_data_i[4:0];
 wire [XLEN-1:0] res_srl  = alu_a_data_i >> alu_b_data_i[4:0];
-wire [XLEN-1:0] res_sra  = $signed(alu_a_data_i) >>> alu_b_data_i[4:0];
+wire [XLEN-1:0] res_sra  = signed'(alu_a_data_i) >>> alu_b_data_i[4:0];
 wire [XLEN-1:0] res_slt  = res_blt;
 wire [XLEN-1:0] res_sltu = res_bltu;
 

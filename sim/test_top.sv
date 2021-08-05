@@ -63,15 +63,14 @@ logic [XLEN-1:0] dram_rd_data;
 
 logic [7:0] cmd_table[] = '{
     CPU_RST,
-    CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h0f, 8'h00, 8'h00, 8'h00,
+    CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h0b, 8'h00, 8'h00, 8'h00,
     // CONF_RD,
     // DATA_WR, 8'haa, 8'hbb, 8'hcc, 8'hdd, 8'hee,
     // DATA_RD
     DATA_WR,
-    8'hb7, 8'hb3, 8'h00, 8'h00,
-    8'h93, 8'h83, 8'h53, 8'h50,
-    8'h13, 8'h81, 8'h83, 8'h00,
-    8'h23, 8'h24, 8'h27, 8'h02,
+    8'h93, 8'h0f, 8'h70, 8'hff,
+    8'h93, 8'hdc, 8'h9f, 8'h40,
+    8'h23, 8'h20, 8'h92, 8'h01,
     CPU_RUN
 };
 
