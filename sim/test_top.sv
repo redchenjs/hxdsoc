@@ -36,31 +36,6 @@ logic       uart_tx_data_rdy_o;
 logic            uart_tx_data_st;
 logic [XLEN-1:0] uart_tx_data_cnt;
 
-logic cpu_rst_n;
-
-logic [7:0] uart_rx_data;
-logic       uart_rx_data_vld;
-logic       uart_rx_data_rdy;
-
-logic [7:0] uart_tx_data;
-logic       uart_tx_data_vld;
-logic       uart_tx_data_rdy;
-
-logic            ram_rw_sel;
-logic [XLEN-1:0] ram_rw_addr;
-logic      [7:0] ram_rd_data;
-logic      [3:0] ram_wr_byte_en;
-
-logic [XLEN-1:0] iram_rd_addr;
-
-logic [XLEN-1:0] dram_rd_addr;
-logic [XLEN-1:0] dram_wr_addr;
-logic [XLEN-1:0] dram_wr_data;
-logic      [3:0] dram_wr_byte_en;
-
-logic [XLEN-1:0] iram_rd_data;
-logic [XLEN-1:0] dram_rd_data;
-
 logic [7:0] cmd_table[] = '{
     CPU_RST,
     CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h0b, 8'h00, 8'h00, 8'h00,
@@ -86,6 +61,31 @@ uart_tx data_gen(
     .uart_tx_o(uart_rx_i),
     .uart_tx_data_rdy_o(uart_tx_data_rdy_o)
 );
+
+logic cpu_rst_n;
+
+logic [7:0] uart_rx_data;
+logic       uart_rx_data_vld;
+logic       uart_rx_data_rdy;
+
+logic [7:0] uart_tx_data;
+logic       uart_tx_data_vld;
+logic       uart_tx_data_rdy;
+
+logic            ram_rw_sel;
+logic [XLEN-1:0] ram_rw_addr;
+logic      [7:0] ram_rd_data;
+logic      [3:0] ram_wr_byte_en;
+
+logic [XLEN-1:0] iram_rd_addr;
+
+logic [XLEN-1:0] dram_rd_addr;
+logic [XLEN-1:0] dram_wr_addr;
+logic [XLEN-1:0] dram_wr_data;
+logic      [3:0] dram_wr_byte_en;
+
+logic [XLEN-1:0] iram_rd_data;
+logic [XLEN-1:0] dram_rd_data;
 
 uart_rx uart_rx(
     .clk_i(sys_clk),

@@ -29,6 +29,41 @@ module ram #(
     output logic [7:0] ram_rd_data_o
 );
 
+logic [XLEN-1:0] iram_rw_addr_0;
+logic [XLEN-1:0] iram_rw_addr_1;
+logic [XLEN-1:0] iram_rw_addr_2;
+logic [XLEN-1:0] iram_rw_addr_3;
+
+logic [7:0] iram_rd_data_0;
+logic [7:0] iram_rd_data_1;
+logic [7:0] iram_rd_data_2;
+logic [7:0] iram_rd_data_3;
+
+logic [XLEN-1:0] dram_rd_addr_0;
+logic [XLEN-1:0] dram_rd_addr_1;
+logic [XLEN-1:0] dram_rd_addr_2;
+logic [XLEN-1:0] dram_rd_addr_3;
+
+logic [7:0] dram_rd_data_0;
+logic [7:0] dram_rd_data_1;
+logic [7:0] dram_rd_data_2;
+logic [7:0] dram_rd_data_3;
+
+logic [XLEN-1:0] dram_wr_addr_0;
+logic [XLEN-1:0] dram_wr_addr_1;
+logic [XLEN-1:0] dram_wr_addr_2;
+logic [XLEN-1:0] dram_wr_addr_3;
+
+logic [XLEN-1:0] dram_wr_data_0;
+logic [XLEN-1:0] dram_wr_data_1;
+logic [XLEN-1:0] dram_wr_data_2;
+logic [XLEN-1:0] dram_wr_data_3;
+
+logic dram_wr_byte_en_0;
+logic dram_wr_byte_en_1;
+logic dram_wr_byte_en_2;
+logic dram_wr_byte_en_3;
+
 logic [XLEN-1:0] iram_rw_addr;
 
 logic [XLEN-1:0] dram_rd_addr;
@@ -39,43 +74,119 @@ logic      [3:0] dram_wr_byte_en;
 logic [XLEN-1:0] iram_rd_data;
 logic [XLEN-1:0] dram_rd_data;
 
-logic [7:0] ram_rd_data;
-
 wire iram_rw_en = (iram_rw_addr[31:16] == 16'h0000);
 
 wire dram_rd_en = (dram_rd_addr[31:16] == 16'h1000);
 wire dram_wr_en = (dram_wr_addr[31:16] == 16'h1000);
 
+wire [XLEN-1:2] iram_rw_addr_a = iram_rw_addr[XLEN-1:2];
+wire [XLEN-1:2] iram_rw_addr_b = iram_rw_addr[XLEN-1:2] + 1'b1;
+
+wire [XLEN-1:2] dram_rd_addr_a = dram_rd_addr[XLEN-1:2];
+wire [XLEN-1:2] dram_rd_addr_b = dram_rd_addr[XLEN-1:2] + 1'b1;
+
+wire [XLEN-1:2] dram_wr_addr_a = dram_wr_addr[XLEN-1:2];
+wire [XLEN-1:2] dram_wr_addr_b = dram_wr_addr[XLEN-1:2] + 1'b1;
+
 assign iram_rd_data_o = iram_rd_data;
 assign dram_rd_data_o = dram_rd_data;
 
-assign ram_rd_data_o = ram_rd_data;
+assign ram_rd_data_o = iram_rw_en ? iram_rd_data[7:0] : (dram_rd_en ? dram_rd_data[7:0] : 8'h00);
 
-iram iram(
+iram iram_0(
     .clka(clk_i),
     .ena(iram_rw_en),
-    .wea(ram_wr_byte_en_i[3:2]),
-    .addra({iram_rw_addr[15:2], 1'b1}),
-    .dina(ram_wr_data_i[31:16]),
-    .douta(iram_rd_data[31:16]),
+    .wea(ram_wr_byte_en_i[0]),
+    .addra(iram_rw_addr_0),
+    .dina(ram_wr_data_i),
     .clkb(clk_i),
     .enb(iram_rw_en),
-    .web(ram_wr_byte_en_i[1:0]),
-    .addrb({iram_rw_addr[15:2], 1'b0}),
-    .dinb(ram_wr_data_i[15:0]),
-    .doutb(iram_rd_data[15:0])
+    .addrb(iram_rw_addr_0),
+    .doutb(iram_rd_data_0)
 );
 
-dram dram(
+iram iram_1(
+    .clka(clk_i),
+    .ena(iram_rw_en),
+    .wea(ram_wr_byte_en_i[1]),
+    .addra(iram_rw_addr_1),
+    .dina(ram_wr_data_i),
+    .clkb(clk_i),
+    .enb(iram_rw_en),
+    .addrb(iram_rw_addr_1),
+    .doutb(iram_rd_data_1)
+);
+
+iram iram_2(
+    .clka(clk_i),
+    .ena(iram_rw_en),
+    .wea(ram_wr_byte_en_i[2]),
+    .addra(iram_rw_addr_2),
+    .dina(ram_wr_data_i),
+    .clkb(clk_i),
+    .enb(iram_rw_en),
+    .addrb(iram_rw_addr_2),
+    .doutb(iram_rd_data_2)
+);
+
+iram iram_3(
+    .clka(clk_i),
+    .ena(iram_rw_en),
+    .wea(ram_wr_byte_en_i[3]),
+    .addra(iram_rw_addr_3),
+    .dina(ram_wr_data_i),
+    .clkb(clk_i),
+    .enb(iram_rw_en),
+    .addrb(iram_rw_addr_3),
+    .doutb(iram_rd_data_3)
+);
+
+dram dram_0(
     .clka(clk_i),
     .ena(dram_wr_en),
-    .wea(dram_wr_byte_en),
-    .addra(dram_wr_addr[15:2]),
-    .dina(dram_wr_data),
+    .wea(dram_wr_byte_en_0),
+    .addra(dram_wr_addr_0),
+    .dina(dram_wr_data_0),
     .clkb(clk_i),
     .enb(dram_rd_en),
-    .addrb(dram_rd_addr[15:2]),
-    .doutb(dram_rd_data)
+    .addrb(dram_rd_addr_0),
+    .doutb(dram_rd_data_0)
+);
+
+dram dram_1(
+    .clka(clk_i),
+    .ena(dram_wr_en),
+    .wea(dram_wr_byte_en_1),
+    .addra(dram_wr_addr_1),
+    .dina(dram_wr_data_1),
+    .clkb(clk_i),
+    .enb(dram_rd_en),
+    .addrb(dram_rd_addr_1),
+    .doutb(dram_rd_data_1)
+);
+
+dram dram_2(
+    .clka(clk_i),
+    .ena(dram_wr_en),
+    .wea(dram_wr_byte_en_2),
+    .addra(dram_wr_addr_2),
+    .dina(dram_wr_data_2),
+    .clkb(clk_i),
+    .enb(dram_rd_en),
+    .addrb(dram_rd_addr_2),
+    .doutb(dram_rd_data_2)
+);
+
+dram dram_3(
+    .clka(clk_i),
+    .ena(dram_wr_en),
+    .wea(dram_wr_byte_en_3),
+    .addra(dram_wr_addr_3),
+    .dina(dram_wr_data_3),
+    .clkb(clk_i),
+    .enb(dram_rd_en),
+    .addrb(dram_rd_addr_3),
+    .doutb(dram_rd_data_3)
 );
 
 always_comb begin
@@ -95,17 +206,141 @@ always_comb begin
         dram_wr_byte_en = dram_wr_byte_en_i;
     end
 
-    case (ram_rw_addr_i[1:0])
-        2'b00:
-            ram_rd_data = iram_rw_en ? iram_rd_data[7:0] : (dram_rd_en ? dram_rd_data[7:0] : 8'h00);
-        2'b01:
-            ram_rd_data = iram_rw_en ? iram_rd_data[15:8] : (dram_rd_en ? dram_rd_data[15:8] : 8'h00);
-        2'b10:
-            ram_rd_data = iram_rw_en ? iram_rd_data[23:16] : (dram_rd_en ? dram_rd_data[23:16] : 8'h00);
-        2'b11:
-            ram_rd_data = iram_rw_en ? iram_rd_data[31:24] : (dram_rd_en ? dram_rd_data[31:24] : 8'h00);
-        default:
-            ram_rd_data = 8'h00;
+    case (iram_rw_addr[1:0])
+        2'b00: begin
+            iram_rw_addr_0 = iram_rw_addr_a;
+            iram_rw_addr_1 = iram_rw_addr_a;
+            iram_rw_addr_2 = iram_rw_addr_a;
+            iram_rw_addr_3 = iram_rw_addr_a;
+
+            iram_rd_data = {iram_rd_data_3, iram_rd_data_2, iram_rd_data_1, iram_rd_data_0};
+        end
+        2'b01: begin
+            iram_rw_addr_0 = iram_rw_addr_b;
+            iram_rw_addr_1 = iram_rw_addr_a;
+            iram_rw_addr_2 = iram_rw_addr_a;
+            iram_rw_addr_3 = iram_rw_addr_a;
+
+            iram_rd_data = {iram_rd_data_0, iram_rd_data_3, iram_rd_data_2, iram_rd_data_1};
+        end
+        2'b10: begin
+            iram_rw_addr_0 = iram_rw_addr_b;
+            iram_rw_addr_1 = iram_rw_addr_b;
+            iram_rw_addr_2 = iram_rw_addr_a;
+            iram_rw_addr_3 = iram_rw_addr_a;
+
+            iram_rd_data = {iram_rd_data_1, iram_rd_data_0, iram_rd_data_3, iram_rd_data_2};
+        end
+        2'b11: begin
+            iram_rw_addr_0 = iram_rw_addr_b;
+            iram_rw_addr_1 = iram_rw_addr_b;
+            iram_rw_addr_2 = iram_rw_addr_b;
+            iram_rw_addr_3 = iram_rw_addr_a;
+
+            iram_rd_data = {iram_rd_data_2, iram_rd_data_1, iram_rd_data_0, iram_rd_data_3};
+        end
+    endcase
+
+    case (dram_rd_addr[1:0])
+        2'b00: begin
+            dram_rd_addr_0 = dram_rd_addr_a;
+            dram_rd_addr_1 = dram_rd_addr_a;
+            dram_rd_addr_2 = dram_rd_addr_a;
+            dram_rd_addr_3 = dram_rd_addr_a;
+
+            dram_rd_data = {dram_rd_data_3, dram_rd_data_2, dram_rd_data_1, dram_rd_data_0};
+        end
+        2'b01: begin
+            dram_rd_addr_0 = dram_rd_addr_b;
+            dram_rd_addr_1 = dram_rd_addr_a;
+            dram_rd_addr_2 = dram_rd_addr_a;
+            dram_rd_addr_3 = dram_rd_addr_a;
+
+            dram_rd_data = {dram_rd_data_0, dram_rd_data_3, dram_rd_data_2, dram_rd_data_1};
+        end
+        2'b10: begin
+            dram_rd_addr_0 = dram_rd_addr_b;
+            dram_rd_addr_1 = dram_rd_addr_b;
+            dram_rd_addr_2 = dram_rd_addr_a;
+            dram_rd_addr_3 = dram_rd_addr_a;
+
+            dram_rd_data = {dram_rd_data_1, dram_rd_data_0, dram_rd_data_3, dram_rd_data_2};
+        end
+        2'b11: begin
+            dram_rd_addr_0 = dram_rd_addr_b;
+            dram_rd_addr_1 = dram_rd_addr_b;
+            dram_rd_addr_2 = dram_rd_addr_b;
+            dram_rd_addr_3 = dram_rd_addr_a;
+
+            dram_rd_data = {dram_rd_data_2, dram_rd_data_1, dram_rd_data_0, dram_rd_data_3};
+        end
+    endcase
+
+    case (dram_wr_addr[1:0])
+        2'b00: begin
+            dram_wr_addr_0 = dram_wr_addr_a;
+            dram_wr_addr_1 = dram_wr_addr_a;
+            dram_wr_addr_2 = dram_wr_addr_a;
+            dram_wr_addr_3 = dram_wr_addr_a;
+
+            dram_wr_data_0 = dram_wr_data[7:0];
+            dram_wr_data_1 = dram_wr_data[15:8];
+            dram_wr_data_2 = dram_wr_data[23:16];
+            dram_wr_data_3 = dram_wr_data[31:24];
+
+            dram_wr_byte_en_0 = dram_wr_byte_en[0];
+            dram_wr_byte_en_1 = dram_wr_byte_en[1];
+            dram_wr_byte_en_2 = dram_wr_byte_en[2];
+            dram_wr_byte_en_3 = dram_wr_byte_en[3];
+        end
+        2'b01: begin
+            dram_wr_addr_0 = dram_wr_addr_b;
+            dram_wr_addr_1 = dram_wr_addr_a;
+            dram_wr_addr_2 = dram_wr_addr_a;
+            dram_wr_addr_3 = dram_wr_addr_a;
+
+            dram_wr_data_0 = dram_wr_data[31:24];
+            dram_wr_data_1 = dram_wr_data[7:0];
+            dram_wr_data_2 = dram_wr_data[15:8];
+            dram_wr_data_3 = dram_wr_data[23:16];
+
+            dram_wr_byte_en_0 = dram_wr_byte_en[3];
+            dram_wr_byte_en_1 = dram_wr_byte_en[0];
+            dram_wr_byte_en_2 = dram_wr_byte_en[1];
+            dram_wr_byte_en_3 = dram_wr_byte_en[2];
+        end
+        2'b10: begin
+            dram_wr_addr_0 = dram_wr_addr_b;
+            dram_wr_addr_1 = dram_wr_addr_b;
+            dram_wr_addr_2 = dram_wr_addr_a;
+            dram_wr_addr_3 = dram_wr_addr_a;
+
+            dram_wr_data_0 = dram_wr_data[23:16];
+            dram_wr_data_1 = dram_wr_data[31:24];
+            dram_wr_data_2 = dram_wr_data[7:0];
+            dram_wr_data_3 = dram_wr_data[15:8];
+
+            dram_wr_byte_en_0 = dram_wr_byte_en[2];
+            dram_wr_byte_en_1 = dram_wr_byte_en[3];
+            dram_wr_byte_en_2 = dram_wr_byte_en[0];
+            dram_wr_byte_en_3 = dram_wr_byte_en[1];
+        end
+        2'b11: begin
+            dram_wr_addr_0 = dram_wr_addr_b;
+            dram_wr_addr_1 = dram_wr_addr_b;
+            dram_wr_addr_2 = dram_wr_addr_b;
+            dram_wr_addr_3 = dram_wr_addr_a;
+
+            dram_wr_data_0 = dram_wr_data[15:8];
+            dram_wr_data_1 = dram_wr_data[23:16];
+            dram_wr_data_2 = dram_wr_data[31:24];
+            dram_wr_data_3 = dram_wr_data[7:0];
+
+            dram_wr_byte_en_0 = dram_wr_byte_en[1];
+            dram_wr_byte_en_1 = dram_wr_byte_en[2];
+            dram_wr_byte_en_2 = dram_wr_byte_en[3];
+            dram_wr_byte_en_3 = dram_wr_byte_en[0];
+        end
     endcase
 end
 

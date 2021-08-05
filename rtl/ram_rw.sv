@@ -75,7 +75,7 @@ assign uart_tx_data_vld_o = tx_data_vld;
 assign uart_rx_data_rdy_o = rx_data_rdy;
 
 assign ram_rw_sel_o     = ram_rd_en | ram_wr_en;
-assign ram_rw_addr_o    = ram_rd_en ? ram_rd_addr : ram_wr_addr;
+assign ram_rw_addr_o    = ram_rd_en ? ram_rd_addr : {ram_wr_addr[XLEN-1:2], 2'h00};
 assign ram_wr_byte_en_o = ram_wr_byte_en & {4{rx_data_vld & ~cmd_en}};
 
 edge2en rx_data_vld_en(
@@ -280,7 +280,7 @@ begin
                 end
 
                 ram_wr_cnt     <= (ram_wr_cnt == cmd_cnt) ? 32'h0000_0000 : ram_wr_cnt + $unsigned(cfg_wr_en | ram_wr_en);
-                ram_wr_byte_en <= {ram_wr_byte_en[2:0], ram_wr_byte_en[3]};
+                ram_wr_byte_en <= (ram_wr_cnt == cmd_cnt) ? 4'b0000 : {ram_wr_byte_en[2:0], ram_wr_byte_en[3]};
             end
         end else begin
             cmd_en  <= (ram_rd_cnt == cmd_cnt) & tx_data_rdy ? 1'b1 : cmd_en;
