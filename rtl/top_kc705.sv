@@ -67,8 +67,10 @@ IBUFGDS clk_buf(
     .IB(sys_clk_n_i)
 );
 
-xadc_temp xadc_temp(
+adc adc(
     .reset_in(cpu_rst_i),
+    .vp_in(1'b0),
+    .vn_in(1'b0),
     .user_temp_alarm_out(sm_fan_pwm_o)
 );
 
