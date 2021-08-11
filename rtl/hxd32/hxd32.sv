@@ -44,6 +44,13 @@ logic       dram_wr_en;
 logic [2:0] dram_wr_sel;
 logic [2:0] dram_rd_sel;
 
+logic       rd_wr_en;
+logic [1:0] rd_wr_sel;
+logic [4:0] rd_wr_addr;
+
+logic [4:0] rs1_rd_addr;
+logic [4:0] rs2_rd_addr;
+
 logic [XLEN-1:0] rd_wr_data;
 
 logic [XLEN-1:0] rs1_rd_data;
@@ -51,6 +58,8 @@ logic [XLEN-1:0] rs2_rd_data;
 logic [XLEN-1:0] imm_rd_data;
 
 logic [3:0] dram_wr_byte_en;
+
+/* pipeline regs */
 
 logic pc_wr_en_r;
 logic pc_wr_sel_r;
@@ -73,6 +82,13 @@ logic [2:0] alu_op_1_sel_r;
 logic       dram_wr_en_r;
 logic [2:0] dram_wr_sel_r;
 logic [2:0] dram_rd_sel_r;
+
+logic       rd_wr_en_r;
+logic [1:0] rd_wr_sel_r;
+logic [4:0] rd_wr_addr_r;
+
+logic [4:0] rs1_rd_addr_r;
+logic [4:0] rs2_rd_addr_r;
 
 logic [XLEN-1:0] rd_wr_data_r;
 
@@ -105,9 +121,9 @@ ifu #(
     .pc_next_o(pc_next)
 );
 
-ifu_reg #(
+pipe_ifu #(
     .XLEN(XLEN)
-) ifu_reg (
+) pipe_ifu (
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 
@@ -121,17 +137,9 @@ ifu_reg #(
 idu #(
     .XLEN(XLEN)
 ) idu (
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
-
-    .pc_next_i(pc_next_r),
-
     .alu_comp_i(alu_comp),
-    .alu_data_i(alu_data),
 
     .inst_data_i(iram_rd_data_i),
-
-    .rd_wr_data_i(rd_wr_data),
 
     .pc_wr_en_o(pc_wr_en),
     .pc_wr_sel_o(pc_wr_sel),
@@ -149,14 +157,19 @@ idu #(
     .dram_wr_sel_o(dram_wr_sel),
     .dram_rd_sel_o(dram_rd_sel),
 
-    .rs1_rd_data_o(rs1_rd_data),
-    .rs2_rd_data_o(rs2_rd_data),
+    .rd_wr_en_o(rd_wr_en),
+    .rd_wr_sel_o(rd_wr_sel),
+    .rd_wr_addr_o(rd_wr_addr),
+
+    .rs1_rd_addr_o(rs1_rd_addr),
+    .rs2_rd_addr_o(rs2_rd_addr),
+
     .imm_rd_data_o(imm_rd_data)
 );
 
-idu_reg #(
+pipe_idu #(
     .XLEN(XLEN)
-) idu_reg (
+) pipe_idu (
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 
@@ -176,8 +189,13 @@ idu_reg #(
     .dram_wr_sel_i(dram_wr_sel),
     .dram_rd_sel_i(dram_rd_sel),
 
-    .rs1_rd_data_i(rs1_rd_data),
-    .rs2_rd_data_i(rs2_rd_data),
+    .rd_wr_en_i(rd_wr_en),
+    .rd_wr_sel_i(rd_wr_sel),
+    .rd_wr_addr_i(rd_wr_addr),
+
+    .rs1_rd_addr_i(rs1_rd_addr),
+    .rs2_rd_addr_i(rs2_rd_addr),
+
     .imm_rd_data_i(imm_rd_data),
 
     .pc_wr_en_o(pc_wr_en_r),
@@ -196,9 +214,44 @@ idu_reg #(
     .dram_wr_sel_o(dram_wr_sel_r),
     .dram_rd_sel_o(dram_rd_sel_r),
 
-    .rs1_rd_data_o(rs1_rd_data_r),
-    .rs2_rd_data_o(rs2_rd_data_r),
+    .rd_wr_en_o(rd_wr_en_r),
+    .rd_wr_sel_o(rd_wr_sel_r),
+    .rd_wr_addr_o(rd_wr_addr_r),
+
+    .rs1_rd_addr_o(rs1_rd_addr_r),
+    .rs2_rd_addr_o(rs2_rd_addr_r),
+
     .imm_rd_data_o(imm_rd_data_r)
+);
+
+regfile #(
+    .XLEN(XLEN)
+) regfile (
+    .clk_i(clk_i),
+    .rst_n_i(rst_n_i),
+
+    .rd_wr_en_i(rd_wr_en),
+    .rd_wr_addr_i(rd_wr_addr),
+    .rd_wr_data_i(rd_wr_data),
+
+    .rs1_rd_addr_i(rs1_rd_addr),
+    .rs2_rd_addr_i(rs2_rd_addr),
+
+    .rs1_rd_data_o(rs1_rd_data),
+    .rs2_rd_data_o(rs2_rd_data)
+);
+
+pipe_regfile #(
+    .XLEN(XLEN)
+) pipe_regfile (
+    .clk_i(clk_i),
+    .rst_n_i(rst_n_i),
+
+    .rs1_rd_data_i(rs1_rd_data),
+    .rs2_rd_data_i(rs2_rd_data),
+
+    .rs1_rd_data_o(rs1_rd_data_r),
+    .rs2_rd_data_o(rs2_rd_data_r)
 );
 
 exu #(
@@ -222,9 +275,9 @@ exu #(
     .alu_data_o(alu_data)
 );
 
-exu_reg #(
+pipe_exu #(
     .XLEN(XLEN)
-) exu_reg (
+) pipe_exu (
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 
@@ -244,9 +297,9 @@ mem #(
     .dram_wr_byte_en_o(dram_wr_byte_en)
 );
 
-mem_reg #(
+pipe_mem #(
     .XLEN(XLEN)
-) mem_reg (
+) pipe_mem (
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 
@@ -258,15 +311,21 @@ mem_reg #(
 wb #(
     .XLEN(XLEN)
 ) wb (
+    .rd_wr_sel_i(rd_wr_sel),
+
+    .pc_next_i(pc_next_r),
+
+    .alu_data_i(alu_data),
+
     .dram_rd_sel_i(dram_rd_sel),
     .dram_rd_data_i(dram_rd_data_i),
 
     .rd_wr_data_o(rd_wr_data)
 );
 
-wb_reg #(
+pipe_wb #(
     .XLEN(XLEN)
-) wb_reg (
+) pipe_wb (
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 

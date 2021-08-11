@@ -5,22 +5,12 @@
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
-import reg_op_enum::*;
-
 module idu #(
     parameter XLEN = 32
 ) (
-    input logic clk_i,
-    input logic rst_n_i,
-
-    input logic [XLEN-1:0] pc_next_i,
-
-    input logic            alu_comp_i,
-    input logic [XLEN-1:0] alu_data_i,
+    input logic alu_comp_i,
 
     input logic [XLEN-1:0] inst_data_i,
-
-    input logic [XLEN-1:0] rd_wr_data_i,
 
     output logic pc_wr_en_o,
     output logic pc_wr_sel_o,
@@ -38,19 +28,15 @@ module idu #(
     output logic [2:0] dram_wr_sel_o,
     output logic [2:0] dram_rd_sel_o,
 
-    output logic [XLEN-1:0] rs1_rd_data_o,
-    output logic [XLEN-1:0] rs2_rd_data_o,
+    output logic       rd_wr_en_o,
+    output logic [1:0] rd_wr_sel_o,
+    output logic [4:0] rd_wr_addr_o,
+
+    output logic [4:0] rs1_rd_addr_o,
+    output logic [4:0] rs2_rd_addr_o,
+
     output logic [XLEN-1:0] imm_rd_data_o
 );
-
-logic       rd_wr_en;
-logic [1:0] rd_wr_sel;
-logic [4:0] rd_wr_addr;
-
-logic [4:0] rs1_rd_addr;
-logic [4:0] rs2_rd_addr;
-
-logic [XLEN-1:0] rd_wr_data;
 
 decode #(
     .XLEN(XLEN)
@@ -63,12 +49,12 @@ decode #(
     .pc_wr_sel_o(pc_wr_sel_o),
     .pc_inc_sel_o(pc_inc_sel_o),
 
-    .rd_wr_en_o(rd_wr_en),
-    .rd_wr_sel_o(rd_wr_sel),
-    .rd_wr_addr_o(rd_wr_addr),
+    .rd_wr_en_o(rd_wr_en_o),
+    .rd_wr_sel_o(rd_wr_sel_o),
+    .rd_wr_addr_o(rd_wr_addr_o),
 
-    .rs1_rd_addr_o(rs1_rd_addr),
-    .rs2_rd_addr_o(rs2_rd_addr),
+    .rs1_rd_addr_o(rs1_rd_addr_o),
+    .rs2_rd_addr_o(rs2_rd_addr_o),
 
     .alu_a_sel_o(alu_a_sel_o),
     .alu_b_sel_o(alu_b_sel_o),
@@ -84,35 +70,5 @@ decode #(
 
     .imm_rd_data_o(imm_rd_data_o)
 );
-
-regfile #(
-    .XLEN(XLEN)
-) regfile (
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
-
-    .rd_wr_en_i(rd_wr_en),
-    .rd_wr_addr_i(rd_wr_addr),
-    .rd_wr_data_i(rd_wr_data),
-
-    .rs1_rd_addr_i(rs1_rd_addr),
-    .rs2_rd_addr_i(rs2_rd_addr),
-
-    .rs1_rd_data_o(rs1_rd_data_o),
-    .rs2_rd_data_o(rs2_rd_data_o)
-);
-
-always_comb begin
-    case (rd_wr_sel)
-        RD_WR_ALU:
-            rd_wr_data = alu_data_i;
-        RD_WR_DRAM:
-            rd_wr_data = rd_wr_data_i;
-        RD_WR_PC_NEXT:
-            rd_wr_data = pc_next_i;
-        default:
-            rd_wr_data = {XLEN{1'b0}};
-    endcase
-end
 
 endmodule

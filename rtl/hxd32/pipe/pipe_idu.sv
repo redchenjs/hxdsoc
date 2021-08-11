@@ -1,11 +1,11 @@
 /*
- * idu_reg.sv
+ * pipe_idu.sv
  *
  *  Created on: 2021-08-03 10:30
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
-module idu_reg #(
+module pipe_idu #(
     parameter XLEN = 32
 ) (
     input logic clk_i,
@@ -27,8 +27,13 @@ module idu_reg #(
     input logic [2:0] dram_wr_sel_i,
     input logic [2:0] dram_rd_sel_i,
 
-    input logic [XLEN-1:0] rs1_rd_data_i,
-    input logic [XLEN-1:0] rs2_rd_data_i,
+    input logic       rd_wr_en_i,
+    input logic [1:0] rd_wr_sel_i,
+    input logic [4:0] rd_wr_addr_i,
+
+    input logic [4:0] rs1_rd_addr_i,
+    input logic [4:0] rs2_rd_addr_i,
+
     input logic [XLEN-1:0] imm_rd_data_i,
 
     output logic pc_wr_en_o,
@@ -47,8 +52,13 @@ module idu_reg #(
     output logic [2:0] dram_wr_sel_o,
     output logic [2:0] dram_rd_sel_o,
 
-    output logic [XLEN-1:0] rs1_rd_data_o,
-    output logic [XLEN-1:0] rs2_rd_data_o,
+    output logic       rd_wr_en_o,
+    output logic [1:0] rd_wr_sel_o,
+    output logic [4:0] rd_wr_addr_o,
+
+    output logic [4:0] rs1_rd_addr_o,
+    output logic [4:0] rs2_rd_addr_o,
+
     output logic [XLEN-1:0] imm_rd_data_o
 );
 
@@ -71,8 +81,13 @@ begin
         dram_wr_sel_o <= 3'b000;
         dram_rd_sel_o <= 3'b000;
 
-        rs1_rd_data_o <= {XLEN{1'b0}};
-        rs2_rd_data_o <= {XLEN{1'b0}};
+        rd_wr_en_o   <= 1'b0;
+        rd_wr_sel_o  <= 2'b00;
+        rd_wr_addr_o <= 5'h00;
+
+        rs1_rd_addr_o <= 5'h00;
+        rs2_rd_addr_o <= 5'h00;
+
         imm_rd_data_o <= {XLEN{1'b0}};
     end else begin
         pc_wr_en_o   <= pc_wr_en_i;
@@ -91,8 +106,13 @@ begin
         dram_wr_sel_o <= dram_wr_sel_i;
         dram_rd_sel_o <= dram_rd_sel_i;
 
-        rs1_rd_data_o <= rs1_rd_data_i;
-        rs2_rd_data_o <= rs2_rd_data_i;
+        rd_wr_en_o   <= rd_wr_en_i;
+        rd_wr_sel_o  <= rd_wr_sel_i;
+        rd_wr_addr_o <= rd_wr_addr_i;
+
+        rs1_rd_addr_o <= rs1_rd_addr_i;
+        rs2_rd_addr_o <= rs2_rd_addr_i;
+
         imm_rd_data_o <= imm_rd_data_i;
     end
 end

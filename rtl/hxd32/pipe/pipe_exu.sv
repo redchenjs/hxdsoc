@@ -1,11 +1,11 @@
 /*
- * exu_reg.sv
+ * pipe_exu.sv
  *
  *  Created on: 2021-08-03 10:30
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
-module exu_reg #(
+module pipe_exu #(
     parameter XLEN = 32
 ) (
     input logic clk_i,

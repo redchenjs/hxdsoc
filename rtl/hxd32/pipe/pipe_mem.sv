@@ -1,11 +1,11 @@
 /*
- * mem_reg.sv
+ * pipe_mem.sv
  *
  *  Created on: 2021-08-03 10:30
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
-module mem_reg #(
+module pipe_mem #(
     parameter XLEN = 32
 ) (
     input logic clk_i,

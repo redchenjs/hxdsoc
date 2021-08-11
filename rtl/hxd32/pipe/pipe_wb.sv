@@ -1,11 +1,11 @@
 /*
- * wb_reg.sv
+ * pipe_wb.sv
  *
  *  Created on: 2021-08-03 10:30
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
-module wb_reg #(
+module pipe_wb #(
     parameter XLEN = 32
 ) (
     input logic clk_i,

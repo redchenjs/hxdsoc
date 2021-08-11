@@ -1,11 +1,11 @@
 /*
- * ifu_reg.sv
+ * pipe_ifu.sv
  *
  *  Created on: 2021-08-03 10:30
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
-module ifu_reg #(
+module pipe_ifu #(
     parameter XLEN = 32
 ) (
     input logic clk_i,
