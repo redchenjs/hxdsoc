@@ -176,12 +176,16 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    conf.c_iflag = 0;
+    conf.c_oflag &= ~OPOST;
+    conf.c_lflag &= ~(ISIG | ICANON);
     conf.c_cflag |= CLOCAL | CREAD | CS8;
+
+    conf.c_cc[VMIN] = 1;
+    conf.c_cc[VTIME] = 0;
 
     cfsetispeed(&conf, B921600);
     cfsetospeed(&conf, B921600);
-
-    conf.c_cc[VTIME] = 100;
 
     tcflush(sfd, TCIFLUSH);
     if((tcsetattr(sfd, TCSANOW, &conf)) != 0) {
