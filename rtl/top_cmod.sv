@@ -7,9 +7,8 @@
 
 module top_cmod(
     input logic clk_i,          // clk_i = 12 MHz
-    input logic rst_n_i,        // rst_n_i, active low
+    input logic rst_i,          // rst_i, active high
 
-    input logic btn0_i,
     input logic btn1_i,
 
     input  logic uart_rx_i,
@@ -18,6 +17,7 @@ module top_cmod(
     output logic led0_r_n_o,
     output logic led0_g_n_o,
     output logic led0_b_n_o,
+
     output logic led1_o,
     output logic led2_o
 );
@@ -52,15 +52,15 @@ logic      [3:0] dram_wr_byte_en;
 logic [XLEN-1:0] iram_rd_data;
 logic [XLEN-1:0] dram_rd_data;
 
-assign led0_r_n_o = ~(rst_n_i & ~cpu_rst_n & ~ram_rw_sel);
-assign led0_g_n_o = ~(rst_n_i & cpu_rst_n);
-assign led0_b_n_o = ~(rst_n_i & ~cpu_rst_n & ram_rw_sel);
+assign led0_r_n_o = ~(~rst_i & ~cpu_rst_n & ~ram_rw_sel);
+assign led0_g_n_o = ~(~rst_i & cpu_rst_n);
+assign led0_b_n_o = ~(~rst_i & ~cpu_rst_n & ram_rw_sel);
 assign led1_o = uart_rx_data_vld;
 assign led2_o = uart_tx_data_vld;
 
 sys_ctl sys_ctl(
     .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
+    .rst_n_i(~rst_i),
 
     .sys_clk_o(sys_clk),
     .sys_rst_n_o(sys_rst_n)
@@ -73,7 +73,7 @@ uart_rx uart_rx(
     .uart_rx_i(uart_rx_i),
     .uart_rx_data_rdy_i(uart_rx_data_rdy),
 
-    .uart_rx_baud_div_i(32'd107),
+    .uart_rx_baud_div_i(32'd52),
 
     .uart_rx_data_o(uart_rx_data),
     .uart_rx_data_vld_o(uart_rx_data_vld)
@@ -86,7 +86,7 @@ uart_tx uart_tx(
    .uart_tx_data_i(uart_tx_data),
    .uart_tx_data_vld_i(uart_tx_data_vld),
 
-   .uart_tx_baud_div_i(32'd107),
+   .uart_tx_baud_div_i(32'd52),
 
    .uart_tx_o(uart_tx_o),
    .uart_tx_data_rdy_o(uart_tx_data_rdy)
