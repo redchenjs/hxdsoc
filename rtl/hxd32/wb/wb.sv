@@ -10,9 +10,6 @@ import ram_op_enum::*;
 module wb #(
     parameter XLEN = 32
 ) (
-    input logic clk_i,
-    input logic rst_n_i,
-
     input logic      [2:0] dram_rd_sel_i,
     input logic [XLEN-1:0] dram_rd_data_i,
 

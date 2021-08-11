@@ -10,9 +10,6 @@ import alu_op_enum::*;
 module alu #(
     parameter XLEN = 32
 ) (
-    input logic clk_i,
-    input logic rst_n_i,
-
     input logic [2:0] alu_comp_sel_i,
 
     input logic       alu_op_0_sel_i,

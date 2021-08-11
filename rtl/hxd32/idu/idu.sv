@@ -55,9 +55,6 @@ logic [XLEN-1:0] rd_wr_data;
 decode #(
     .XLEN(XLEN)
 ) decode (
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
-
     .alu_comp_i(alu_comp_i),
 
     .inst_data_i(inst_data_i),

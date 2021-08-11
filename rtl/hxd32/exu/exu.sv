@@ -10,9 +10,6 @@ import alu_op_enum::*;
 module exu #(
     parameter XLEN = 32
 ) (
-    input logic clk_i,
-    input logic rst_n_i,
-
     input logic [XLEN-1:0] pc_data_i,
 
     input logic [XLEN-1:0] rs1_rd_data_i,
@@ -37,9 +34,6 @@ logic [XLEN-1:0] alu_b_data;
 alu #(
     .XLEN(XLEN)
 ) alu (
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
-
     .alu_comp_sel_i(alu_comp_sel_i),
 
     .alu_op_0_sel_i(alu_op_0_sel_i),

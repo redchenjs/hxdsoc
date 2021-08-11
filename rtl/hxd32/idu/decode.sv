@@ -10,9 +10,6 @@ import alu_op_enum::*;
 module decode #(
     parameter XLEN = 32
 ) (
-    input logic clk_i,
-    input logic rst_n_i,
-
     input logic alu_comp_i,
 
     input logic [XLEN-1:0] inst_data_i,

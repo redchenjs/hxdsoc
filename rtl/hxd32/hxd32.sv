@@ -204,9 +204,6 @@ idu_reg #(
 exu #(
     .XLEN(XLEN)
 ) exu (
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
-
     .pc_data_i(pc_data_r),
 
     .rs1_rd_data_i(rs1_rd_data),
@@ -241,9 +238,6 @@ exu_reg #(
 mem #(
     .XLEN(XLEN)
 ) mem (
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
-
     .dram_wr_en_i(dram_wr_en),
     .dram_wr_sel_i(dram_wr_sel),
 
@@ -264,9 +258,6 @@ mem_reg #(
 wb #(
     .XLEN(XLEN)
 ) wb (
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
-
     .dram_rd_sel_i(dram_rd_sel),
     .dram_rd_data_i(dram_rd_data_i),
 
