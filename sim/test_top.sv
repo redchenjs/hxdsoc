@@ -38,14 +38,15 @@ logic [XLEN-1:0] uart_tx_data_cnt;
 
 logic [7:0] cmd_table[] = '{
     CPU_RST,
-    CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h0b, 8'h00, 8'h00, 8'h00,
+    CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h0f, 8'h00, 8'h00, 8'h00,
     // CONF_RD,
     // DATA_WR, 8'haa, 8'hbb, 8'hcc, 8'hdd, 8'hee,
     // DATA_RD
     DATA_WR,
-    8'h93, 8'h05, 8'h00, 8'h00,
-    8'h6f, 8'h00, 8'h50, 8'h00,
-    8'h93, 8'h85, 8'h15, 8'h00,
+    8'h23, 8'ha0, 8'h84, 8'h00,
+    8'h0f, 8'h00, 8'hf0, 8'h0f,
+    8'h83, 8'ha1, 8'h04, 8'h00,
+    8'h97, 8'h04, 8'h00, 8'h10,
     CPU_RUN
 };
 

@@ -102,7 +102,7 @@ logic [1:0] alu_b_sel;
 
 logic [XLEN-1:0] imm;
 
-assign pc_wr_en_o   = 1'b1;
+assign pc_wr_en_o   = ~opcode_load;
 assign pc_wr_sel_o  = opcode_jal | opcode_jalr | (opcode_branch & alu_comp_i);
 assign pc_inc_sel_o = ~(inst_data_i[1] & inst_data_i[0]);
 

@@ -104,7 +104,7 @@ logic            reg_wr_en_r1;
 logic      [4:0] reg_wr_addr_r1;
 logic [XLEN-1:0] reg_wr_data_r1;
 
-assign inst_data = pc_wr_sel_r1 ? 32'h0000_0013 : iram_rd_data_i;
+assign inst_data = ~pc_wr_en_r1 | pc_wr_sel_r1 ? 32'h0000_0013 : iram_rd_data_i;
 
 assign iram_rd_addr_o = pc_data;
 assign dram_rd_addr_o = alu_data;
