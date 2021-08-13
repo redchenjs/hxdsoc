@@ -61,17 +61,12 @@ assign gpio_led_o[2] = uart_rx_data_rdy;
 assign gpio_led_o[1] = uart_tx_data_vld;
 assign gpio_led_o[0] = uart_tx_data_rdy;
 
+assign sm_fan_pwm_o = cpu_rst_n;
+
 IBUFGDS clk_buf(
     .O(sys_clk_i),
     .I(sys_clk_p_i),
     .IB(sys_clk_n_i)
-);
-
-adc adc(
-    .reset_in(cpu_rst_i),
-    .vp_in(1'b0),
-    .vn_in(1'b0),
-    .user_temp_alarm_out(sm_fan_pwm_o)
 );
 
 sys_ctl sys_ctl(
