@@ -19,10 +19,13 @@ module hxd32 #(
 
     output logic [XLEN-1:0] dram_wr_addr_o,
     output logic [XLEN-1:0] dram_wr_data_o,
-    output logic      [3:0] dram_wr_byte_en_o
+    output logic      [3:0] dram_wr_byte_en_o,
+
+    output logic cpu_fault_o
 );
 
 logic [XLEN-1:0] inst_data;
+logic            inst_error;
 
 logic       pc_wr_en;
 logic [1:0] pc_wr_sel;
@@ -113,13 +116,15 @@ assign dram_wr_addr_o    = alu_data;
 assign dram_wr_data_o    = rs2_rd_data;
 assign dram_wr_byte_en_o = dram_wr_byte_en;
 
+assign cpu_fault_o = inst_error;
+
 ifu #(
     .XLEN(XLEN)
 ) ifu (
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
 
-    .pc_wr_en_i(pc_wr_en),
+    .pc_wr_en_i(pc_wr_en & ~inst_error),
     .pc_wr_sel_i(pc_wr_sel),
     .pc_inc_sel_i(pc_inc_sel),
 
@@ -355,5 +360,14 @@ pipe_wb #(
     .reg_wr_addr_o(reg_wr_addr_r1),
     .reg_wr_data_o(reg_wr_data_r1)
 );
+
+always_ff @(posedge clk_i or negedge rst_n_i)
+begin
+    if (!rst_n_i) begin
+        inst_error <= 1'b0;
+    end else begin
+        inst_error <= (inst_data == 32'h0000_0000) ? 1'b1 : inst_error;
+    end
+end
 
 endmodule

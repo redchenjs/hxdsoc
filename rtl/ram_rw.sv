@@ -11,6 +11,8 @@ module ram_rw #(
     input logic clk_i,
     input logic rst_n_i,
 
+    input logic cpu_fault_i,
+
     input logic uart_tx_data_rdy_i,
 
     input logic [7:0] uart_rx_data_i,
@@ -40,6 +42,7 @@ typedef enum logic [7:0] {
 } cmd_en_t;
 
 logic cpu_rst_n;
+logic cpu_fault;
 
 logic cfg_rd_en;
 logic cfg_wr_en;
@@ -85,10 +88,17 @@ edge2en rx_data_vld_en(
     .pos_edge_o(rx_data_vld)
 );
 
+edge2en cpu_fault_en(
+    .clk_i(clk_i),
+    .rst_n_i(rst_n_i),
+    .data_i(cpu_fault_i),
+    .pos_edge_o(cpu_fault)
+);
+
 edge2en tx_data_rdy_en(
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
-    .data_i((cfg_rd_en | ram_rd_en) & uart_tx_data_rdy_i),
+    .data_i((cfg_rd_en | ram_rd_en | cpu_fault) & uart_tx_data_rdy_i),
     .pos_edge_o(tx_data_rdy)
 );
 
@@ -132,6 +142,8 @@ begin
                 endcase
             end else if (ram_rd_en) begin
                 tx_data <= ram_rd_data_i;
+            end else if (cpu_fault_i) begin
+                tx_data <= 8'hef;
             end
 
             ram_rd_cnt <= (ram_rd_cnt == cmd_cnt) ? 32'h0000_0000 : ram_rd_cnt + 1'b1;

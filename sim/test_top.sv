@@ -57,13 +57,14 @@ uart_tx data_gen(
     .uart_tx_data_i(uart_tx_data_i),
     .uart_tx_data_vld_i(uart_tx_data_vld_i),
 
-    .uart_tx_baud_div_i(32'd107),
+    .uart_tx_baud_div_i(32'd100),
 
     .uart_tx_o(uart_rx_i),
     .uart_tx_data_rdy_o(uart_tx_data_rdy_o)
 );
 
 logic cpu_rst_n;
+logic cpu_fault;
 
 logic [7:0] uart_rx_data;
 logic       uart_rx_data_vld;
@@ -95,7 +96,7 @@ uart_rx uart_rx(
     .uart_rx_i(uart_rx_i),
     .uart_rx_data_rdy_i(uart_rx_data_rdy),
 
-    .uart_rx_baud_div_i(32'd107),
+    .uart_rx_baud_div_i(32'd100),
 
     .uart_rx_data_o(uart_rx_data),
     .uart_rx_data_vld_o(uart_rx_data_vld)
@@ -108,7 +109,7 @@ uart_tx uart_tx(
     .uart_tx_data_i(uart_tx_data),
     .uart_tx_data_vld_i(uart_tx_data_vld),
 
-    .uart_tx_baud_div_i(32'd107),
+    .uart_tx_baud_div_i(32'd100),
 
     .uart_tx_o(uart_tx_o),
     .uart_tx_data_rdy_o(uart_tx_data_rdy)
@@ -119,6 +120,8 @@ ram_rw #(
 ) ram_rw (
     .clk_i(sys_clk),
     .rst_n_i(sys_rst_n),
+
+    .cpu_fault_i(cpu_fault),
 
     .uart_tx_data_rdy_i(uart_tx_data_rdy),
 
@@ -177,7 +180,9 @@ hxd32 #(
 
     .dram_wr_addr_o(dram_wr_addr),
     .dram_wr_data_o(dram_wr_data),
-    .dram_wr_byte_en_o(dram_wr_byte_en)
+    .dram_wr_byte_en_o(dram_wr_byte_en),
+
+    .cpu_fault_o(cpu_fault)
 );
 
 initial begin

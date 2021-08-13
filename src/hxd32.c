@@ -181,8 +181,8 @@ int main(int argc, char *argv[])
     conf.c_lflag &= ~(ISIG | ICANON);
     conf.c_cflag |= CLOCAL | CREAD | CS8;
 
-    conf.c_cc[VMIN] = 1;
-    conf.c_cc[VTIME] = 0;
+    conf.c_cc[VMIN] = 0;
+    conf.c_cc[VTIME] = 1;
 
     cfsetispeed(&conf, B921600);
     cfsetospeed(&conf, B921600);
@@ -220,7 +220,8 @@ int main(int argc, char *argv[])
     // cpu run
     cpu_run(sfd);
 
-    sleep(1);
+    // wait cpu
+    read(sfd, data_str, 1);
 
     stat(dramfile, &st);
     size = st.st_size;

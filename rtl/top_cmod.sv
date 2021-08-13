@@ -28,6 +28,7 @@ logic sys_clk;
 logic sys_rst_n;
 
 logic cpu_rst_n;
+logic cpu_fault;
 
 logic [7:0] uart_rx_data;
 logic       uart_rx_data_vld;
@@ -98,6 +99,8 @@ ram_rw #(
     .clk_i(sys_clk),
     .rst_n_i(sys_rst_n),
 
+    .cpu_fault_i(cpu_fault),
+
     .uart_tx_data_rdy_i(uart_tx_data_rdy),
 
     .uart_rx_data_i(uart_rx_data),
@@ -155,7 +158,9 @@ hxd32 #(
 
     .dram_wr_addr_o(dram_wr_addr),
     .dram_wr_data_o(dram_wr_data),
-    .dram_wr_byte_en_o(dram_wr_byte_en)
+    .dram_wr_byte_en_o(dram_wr_byte_en),
+
+    .cpu_fault_o(cpu_fault)
 );
 
 endmodule
