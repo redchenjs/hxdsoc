@@ -15,6 +15,9 @@ module alu #(
     input logic       alu_op_0_sel_i,
     input logic [2:0] alu_op_1_sel_i,
 
+    input logic [XLEN-1:0] alu_a_comp_i,
+    input logic [XLEN-1:0] alu_b_comp_i,
+
     input logic [XLEN-1:0] alu_a_data_i,
     input logic [XLEN-1:0] alu_b_data_i,
 
@@ -25,11 +28,11 @@ module alu #(
 logic            alu_comp;
 logic [XLEN-1:0] alu_data;
 
-wire res_beq  = (alu_a_data_i == alu_b_data_i) ? 1'b1 : 1'b0;
+wire res_beq  = alu_a_comp_i == alu_b_comp_i;
 wire res_bne  = ~res_beq;
-wire res_blt  = (signed'(alu_a_data_i) < signed'(alu_b_data_i)) ? 1'b1 : 1'b0;
+wire res_blt  = signed'(alu_a_comp_i) < signed'(alu_b_comp_i);
 wire res_bge  = ~res_blt;
-wire res_bltu = (alu_a_data_i < alu_b_data_i) ? 1'b1 : 1'b0;
+wire res_bltu = alu_a_comp_i < alu_b_comp_i;
 wire res_bgeu = ~res_bltu;
 
 wire [XLEN-1:0] res_add  = alu_a_data_i + alu_b_data_i;
@@ -40,8 +43,8 @@ wire [XLEN-1:0] res_xor  = alu_a_data_i ^ alu_b_data_i;
 wire [XLEN-1:0] res_sll  = alu_a_data_i << alu_b_data_i[4:0];
 wire [XLEN-1:0] res_srl  = alu_a_data_i >> alu_b_data_i[4:0];
 wire [XLEN-1:0] res_sra  = signed'(alu_a_data_i) >>> alu_b_data_i[4:0];
-wire [XLEN-1:0] res_slt  = res_blt;
-wire [XLEN-1:0] res_sltu = res_bltu;
+wire [XLEN-1:0] res_slt  = signed'(alu_a_data_i) < signed'(alu_b_data_i);
+wire [XLEN-1:0] res_sltu = alu_a_data_i < alu_b_data_i;
 
 assign alu_comp_o = alu_comp;
 assign alu_data_o = alu_data;

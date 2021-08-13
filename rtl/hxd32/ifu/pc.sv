@@ -5,15 +5,17 @@
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
+import pc_op_enum::*;
+
 module pc #(
     parameter XLEN = 32
 ) (
     input logic clk_i,
     input logic rst_n_i,
 
-    input logic pc_wr_en_i,
-    input logic pc_wr_sel_i,
-    input logic pc_inc_sel_i,
+    input logic       pc_wr_en_i,
+    input logic [1:0] pc_wr_sel_i,
+    input logic       pc_inc_sel_i,
 
     input logic [XLEN-1:0] alu_data_i,
 
@@ -35,7 +37,16 @@ begin
         pc <= {XLEN{1'b0}};
     end else begin
         if (pc_wr_en_i) begin
-            pc <= pc_wr_sel_i ? alu_data_i : pc_next;
+            case (pc_wr_sel_i)
+                PC_WR_NEXT:
+                    pc <= pc_next;
+                PC_WR_JALR:
+                    pc <= {alu_data_i[31:1], 1'b0};
+                PC_WR_ALU:
+                    pc <= alu_data_i;
+                default:
+                    pc <= {XLEN{1'b0}};
+            endcase
         end
     end
 end

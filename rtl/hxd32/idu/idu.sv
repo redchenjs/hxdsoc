@@ -12,9 +12,9 @@ module idu #(
 
     input logic [XLEN-1:0] inst_data_i,
 
-    output logic pc_wr_en_o,
-    output logic pc_wr_sel_o,
-    output logic pc_inc_sel_o,
+    output logic       pc_wr_en_o,
+    output logic [1:0] pc_wr_sel_o,
+    output logic       pc_inc_sel_o,
 
     output logic [1:0] alu_a_sel_o,
     output logic [1:0] alu_b_sel_o,

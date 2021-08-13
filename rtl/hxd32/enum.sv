@@ -6,9 +6,10 @@
  */
 
 package pc_op_enum;
-    typedef enum logic {
-        PC_WR_PC_NEXT = 1'b0,
-        PC_WR_ALU     = 1'b1
+    typedef enum logic [1:0] {
+        PC_WR_NEXT = 2'b00,
+        PC_WR_JALR = 2'b01,
+        PC_WR_ALU  = 2'b10
     } pc_wr_sel_t;
 
     typedef enum logic {

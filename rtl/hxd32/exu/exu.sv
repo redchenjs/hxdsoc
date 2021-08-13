@@ -39,6 +39,9 @@ alu #(
     .alu_op_0_sel_i(alu_op_0_sel_i),
     .alu_op_1_sel_i(alu_op_1_sel_i),
 
+    .alu_a_comp_i(rs1_rd_data_i),
+    .alu_b_comp_i(rs2_rd_data_i),
+
     .alu_a_data_i(alu_a_data),
     .alu_b_data_i(alu_b_data),
 

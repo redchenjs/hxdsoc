@@ -11,9 +11,9 @@ module pipe_idu #(
     input logic clk_i,
     input logic rst_n_i,
 
-    input logic pc_wr_en_i,
-    input logic pc_wr_sel_i,
-    input logic pc_inc_sel_i,
+    input logic       pc_wr_en_i,
+    input logic [1:0] pc_wr_sel_i,
+    input logic       pc_inc_sel_i,
 
     input logic [1:0] alu_a_sel_i,
     input logic [1:0] alu_b_sel_i,
@@ -36,9 +36,9 @@ module pipe_idu #(
 
     input logic [XLEN-1:0] imm_rd_data_i,
 
-    output logic pc_wr_en_o,
-    output logic pc_wr_sel_o,
-    output logic pc_inc_sel_o,
+    output logic       pc_wr_en_o,
+    output logic [1:0] pc_wr_sel_o,
+    output logic       pc_inc_sel_o,
 
     output logic [1:0] alu_a_sel_o,
     output logic [1:0] alu_b_sel_o,
@@ -66,7 +66,7 @@ always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
         pc_wr_en_o   <= 1'b0;
-        pc_wr_sel_o  <= 1'b0;
+        pc_wr_sel_o  <= 2'b00;
         pc_inc_sel_o <= 1'b0;
 
         alu_a_sel_o <= 2'b00;

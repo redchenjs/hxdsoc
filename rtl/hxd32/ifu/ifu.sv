@@ -11,9 +11,9 @@ module ifu #(
     input logic clk_i,
     input logic rst_n_i,
 
-    input logic pc_wr_en_i,
-    input logic pc_wr_sel_i,
-    input logic pc_inc_sel_i,
+    input logic       pc_wr_en_i,
+    input logic [1:0] pc_wr_sel_i,
+    input logic       pc_inc_sel_i,
 
     input logic [XLEN-1:0] alu_data_i,
 

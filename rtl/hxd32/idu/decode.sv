@@ -5,6 +5,7 @@
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
+import pc_op_enum::*;
 import alu_op_enum::*;
 
 module decode #(
@@ -14,9 +15,9 @@ module decode #(
 
     input logic [XLEN-1:0] inst_data_i,
 
-    output logic pc_wr_en_o,
-    output logic pc_wr_sel_o,
-    output logic pc_inc_sel_o,
+    output logic       pc_wr_en_o,
+    output logic [1:0] pc_wr_sel_o,
+    output logic       pc_inc_sel_o,
 
     output logic       rd_wr_en_o,
     output logic [1:0] rd_wr_sel_o,
@@ -97,13 +98,15 @@ wire [19:0] imm_j = {inst_data_i[31], inst_data_i[19:12], inst_data_i[20], inst_
 
 logic alu_op_0_sel;
 
+logic [1:0] pc_wr_sel;
+
 logic [1:0] alu_a_sel;
 logic [1:0] alu_b_sel;
 
 logic [XLEN-1:0] imm;
 
 assign pc_wr_en_o   = ~opcode_load;
-assign pc_wr_sel_o  = opcode_jal | opcode_jalr | (opcode_branch & alu_comp_i);
+assign pc_wr_sel_o  = pc_wr_sel;
 assign pc_inc_sel_o = ~(inst_data_i[1] & inst_data_i[0]);
 
 assign rd_wr_en_o     = opcode_lui | opcode_auipc | opcode_op | opcode_op_imm |
@@ -146,60 +149,80 @@ end
 always_comb begin
     case (opcode)
         OPCODE_LOAD: begin
+            pc_wr_sel = PC_WR_NEXT;
+
             alu_a_sel = ALU_A_RS1;
             alu_b_sel = ALU_B_IMM;
 
             imm = {{20{imm_i[11]}}, imm_i};
         end
         OPCODE_STORE: begin
+            pc_wr_sel = PC_WR_NEXT;
+
             alu_a_sel = ALU_A_RS1;
             alu_b_sel = ALU_B_IMM;
 
             imm = {{20{imm_s[11]}}, imm_s};
         end
         OPCODE_BRANCH: begin
-            alu_a_sel = ALU_A_RS1;
-            alu_b_sel = ALU_B_RS2;
+            pc_wr_sel = alu_comp_i ? PC_WR_ALU : PC_WR_NEXT;
+
+            alu_a_sel = ALU_A_PC;
+            alu_b_sel = ALU_B_IMM;
 
             imm = {{19{imm_b[11]}}, imm_b, 1'b0};
         end
         OPCODE_JALR: begin
+            pc_wr_sel = PC_WR_JALR;
+
             alu_a_sel = ALU_A_RS1;
             alu_b_sel = ALU_B_IMM;
 
             imm = {{20{imm_i[11]}}, imm_i};
         end
         OPCODE_JAL: begin
+            pc_wr_sel = PC_WR_ALU;
+
             alu_a_sel = ALU_A_PC;
             alu_b_sel = ALU_B_IMM;
 
             imm = {{11{imm_j[19]}}, imm_j, 1'b0};
         end
         OPCODE_OP_IMM: begin
+            pc_wr_sel = PC_WR_NEXT;
+
             alu_a_sel = ALU_A_RS1;
             alu_b_sel = ALU_B_IMM;
 
             imm = {{20{imm_i[11]}}, imm_i};
         end
         OPCODE_OP: begin
+            pc_wr_sel = PC_WR_NEXT;
+
             alu_a_sel = ALU_A_RS1;
             alu_b_sel = ALU_B_RS2;
 
             imm = {XLEN{1'b0}};
         end
         OPCODE_AUIPC: begin
+            pc_wr_sel = PC_WR_NEXT;
+
             alu_a_sel = ALU_A_PC;
             alu_b_sel = ALU_B_IMM;
 
             imm = {imm_u, {12{1'b0}}};
         end
         OPCODE_LUI: begin
+            pc_wr_sel = PC_WR_NEXT;
+
             alu_a_sel = ALU_A_ZERO;
             alu_b_sel = ALU_B_IMM;
 
             imm = {imm_u, {12{1'b0}}};
         end
         default: begin
+            pc_wr_sel = PC_WR_NEXT;
+
             alu_a_sel = ALU_A_ZERO;
             alu_b_sel = ALU_B_ZERO;
 

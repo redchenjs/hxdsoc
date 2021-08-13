@@ -24,9 +24,9 @@ module hxd32 #(
 
 logic [XLEN-1:0] inst_data;
 
-logic pc_wr_en;
-logic pc_wr_sel;
-logic pc_inc_sel;
+logic       pc_wr_en;
+logic [1:0] pc_wr_sel;
+logic       pc_inc_sel;
 
 logic [XLEN-1:0] pc_data;
 logic [XLEN-1:0] pc_next;
@@ -65,9 +65,9 @@ logic [XLEN-1:0] reg_wr_data;
 
 /* pipeline regs */
 
-logic pc_wr_en_r1;
-logic pc_wr_sel_r1;
-logic pc_inc_sel_r1;
+logic       pc_wr_en_r1;
+logic [1:0] pc_wr_sel_r1;
+logic       pc_inc_sel_r1;
 
 logic [XLEN-1:0] pc_data_r1;
 logic [XLEN-1:0] pc_next_r1;
@@ -104,7 +104,7 @@ logic            reg_wr_en_r1;
 logic      [4:0] reg_wr_addr_r1;
 logic [XLEN-1:0] reg_wr_data_r1;
 
-assign inst_data = ~pc_wr_en_r1 | pc_wr_sel_r1 ? 32'h0000_0013 : iram_rd_data_i;
+assign inst_data = ~pc_wr_en_r1 | (pc_wr_sel_r1 != PC_WR_NEXT) ? 32'h0000_0013 : iram_rd_data_i;
 
 assign iram_rd_addr_o = pc_data;
 assign dram_rd_addr_o = alu_data;
