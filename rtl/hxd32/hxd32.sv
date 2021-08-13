@@ -22,6 +22,8 @@ module hxd32 #(
     output logic      [3:0] dram_wr_byte_en_o
 );
 
+logic [XLEN-1:0] inst_data;
+
 logic pc_wr_en;
 logic pc_wr_sel;
 logic pc_inc_sel;
@@ -102,6 +104,8 @@ logic            reg_wr_en_r1;
 logic      [4:0] reg_wr_addr_r1;
 logic [XLEN-1:0] reg_wr_data_r1;
 
+assign inst_data = pc_wr_sel_r1 ? 32'h0000_0013 : iram_rd_data_i;
+
 assign iram_rd_addr_o = pc_data;
 assign dram_rd_addr_o = alu_data;
 
@@ -143,7 +147,7 @@ idu #(
 ) idu (
     .alu_comp_i(alu_comp),
 
-    .inst_data_i(iram_rd_data_i),
+    .inst_data_i(inst_data),
 
     .pc_wr_en_o(pc_wr_en),
     .pc_wr_sel_o(pc_wr_sel),

@@ -7,21 +7,21 @@
 
 package pc_op_enum;
     typedef enum logic {
-        PC_WR_PC_NEXT = 1'h0,
-        PC_WR_ALU     = 1'h1
+        PC_WR_PC_NEXT = 1'b0,
+        PC_WR_ALU     = 1'b1
     } pc_wr_sel_t;
 
     typedef enum logic {
-        PC_INC_4 = 1'h0,
-        PC_INC_2 = 1'h1
+        PC_INC_4 = 1'b0,
+        PC_INC_2 = 1'b1
     } pc_inc_sel_t;
 endpackage
 
 package reg_op_enum;
     typedef enum logic [1:0] {
-        RD_WR_ALU     = 2'h0,
-        RD_WR_DRAM    = 2'h1,
-        RD_WR_PC_NEXT = 2'h2
+        RD_WR_ALU     = 2'b00,
+        RD_WR_DRAM    = 2'b01,
+        RD_WR_PC_NEXT = 2'b10
     } rd_wr_sel_t;
 endpackage
 
@@ -43,15 +43,15 @@ endpackage
 
 package alu_op_enum;
     typedef enum logic [1:0] {
-        ALU_A_ZERO = 2'h0,
-        ALU_A_RS1  = 2'h1,
-        ALU_A_PC   = 2'h2
+        ALU_A_ZERO = 2'b00,
+        ALU_A_RS1  = 2'b01,
+        ALU_A_PC   = 2'b10
     } alu_a_sel_t;
 
     typedef enum logic [1:0] {
-        ALU_B_ZERO = 2'h0,
-        ALU_B_RS2  = 2'h1,
-        ALU_B_IMM  = 2'h2
+        ALU_B_ZERO = 2'b00,
+        ALU_B_RS2  = 2'b01,
+        ALU_B_IMM  = 2'b10
     } alu_b_sel_t;
 
     typedef enum logic [2:0] {

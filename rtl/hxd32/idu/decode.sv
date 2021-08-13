@@ -164,13 +164,13 @@ always_comb begin
             imm = {{19{imm_b[11]}}, imm_b, 1'b0};
         end
         OPCODE_JALR: begin
-            alu_a_sel = ALU_A_PC;
+            alu_a_sel = ALU_A_RS1;
             alu_b_sel = ALU_B_IMM;
 
             imm = {{20{imm_i[11]}}, imm_i};
         end
         OPCODE_JAL: begin
-            alu_a_sel = ALU_A_RS1;
+            alu_a_sel = ALU_A_PC;
             alu_b_sel = ALU_B_IMM;
 
             imm = {{11{imm_j[19]}}, imm_j, 1'b0};
