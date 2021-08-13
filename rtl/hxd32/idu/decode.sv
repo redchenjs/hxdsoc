@@ -102,14 +102,14 @@ logic [1:0] alu_b_sel;
 
 logic [XLEN-1:0] imm;
 
-assign pc_wr_en_o = 1'b1;
-assign pc_wr_sel_o = opcode_jal | opcode_jalr | (opcode_branch & alu_comp_i);
+assign pc_wr_en_o   = 1'b1;
+assign pc_wr_sel_o  = opcode_jal | opcode_jalr | (opcode_branch & alu_comp_i);
 assign pc_inc_sel_o = ~(inst_data_i[1] & inst_data_i[0]);
 
 assign rd_wr_en_o     = opcode_lui | opcode_auipc | opcode_op | opcode_op_imm |
                         opcode_jal | opcode_jalr | opcode_load;
 assign rd_wr_sel_o[1] = opcode_jal | opcode_jalr;
-assign rd_wr_sel_o[0] = opcode_store;
+assign rd_wr_sel_o[0] = opcode_load;
 assign rd_wr_addr_o   = rd;
 
 assign rs1_rd_addr_o = rs1;
@@ -146,10 +146,10 @@ end
 always_comb begin
     case (opcode)
         OPCODE_LOAD: begin
-            alu_a_sel = ALU_A_ZERO;
-            alu_b_sel = ALU_B_ZERO;
+            alu_a_sel = ALU_A_RS1;
+            alu_b_sel = ALU_B_IMM;
 
-            imm = {{20{imm_i[11] & ~funct3[2]}}, imm_i};
+            imm = {{20{imm_i[11]}}, imm_i};
         end
         OPCODE_STORE: begin
             alu_a_sel = ALU_A_RS1;
@@ -161,7 +161,7 @@ always_comb begin
             alu_a_sel = ALU_A_RS1;
             alu_b_sel = ALU_B_RS2;
 
-            imm = {{19{imm_b[11] & ~funct3[1]}}, imm_b, 1'b0};
+            imm = {{19{imm_b[11]}}, imm_b, 1'b0};
         end
         OPCODE_JALR: begin
             alu_a_sel = ALU_A_PC;

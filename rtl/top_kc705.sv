@@ -96,16 +96,16 @@ uart_rx uart_rx(
 );
 
 uart_tx uart_tx(
-   .clk_i(sys_clk),
-   .rst_n_i(sys_rst_n),
+    .clk_i(sys_clk),
+    .rst_n_i(sys_rst_n),
 
-   .uart_tx_data_i(uart_tx_data),
-   .uart_tx_data_vld_i(uart_tx_data_vld),
+    .uart_tx_data_i(uart_tx_data),
+    .uart_tx_data_vld_i(uart_tx_data_vld),
 
-   .uart_tx_baud_div_i(32'd107),
+    .uart_tx_baud_div_i(32'd107),
 
-   .uart_tx_o(uart_tx_o),
-   .uart_tx_data_rdy_o(uart_tx_data_rdy)
+    .uart_tx_o(uart_tx_o),
+    .uart_tx_data_rdy_o(uart_tx_data_rdy)
 );
 
 ram_rw #(
@@ -141,7 +141,7 @@ ram #(
 
     .ram_rw_sel_i(ram_rw_sel),
     .ram_rw_addr_i(ram_rw_addr),
-    .ram_wr_data_i({uart_rx_data, uart_rx_data, uart_rx_data, uart_rx_data}),
+    .ram_wr_data_i(uart_rx_data),
     .ram_wr_byte_en_i(ram_wr_byte_en),
 
     .iram_rd_addr_i(iram_rd_addr),

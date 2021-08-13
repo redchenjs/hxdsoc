@@ -38,14 +38,23 @@ logic [XLEN-1:0] uart_tx_data_cnt;
 
 logic [7:0] cmd_table[] = '{
     CPU_RST,
-    CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h0b, 8'h00, 8'h00, 8'h00,
+    CONF_WR, 8'h58, 8'h01, 8'h00, 8'h00, 8'h23, 8'h00, 8'h00, 8'h00,
     // CONF_RD,
     // DATA_WR, 8'haa, 8'hbb, 8'hcc, 8'hdd, 8'hee,
     // DATA_RD
     DATA_WR,
-    8'hb7, 8'h0e, 8'h00, 8'h40,
-    8'h93, 8'hb8, 8'h7e, 8'hff,
-    8'h23, 8'h26, 8'h11, 8'h01,
+    8'h17, 8'h07, 8'h00, 8'h10,
+    8'h13, 8'h07, 8'h87, 8'hf1,
+
+    8'h97, 8'h00, 8'h00, 8'h10,
+    8'h93, 8'h80, 8'h20, 8'h2a,
+
+    8'h37, 8'h0c, 8'h80, 8'h00,
+    8'h93, 8'h0b, 8'hfc, 8'hfb,
+    8'h23, 8'haf, 8'h70, 8'hbf,
+
+    8'h83, 8'h87, 8'hf0, 8'hbf,
+    8'h13, 8'h00, 8'h00, 8'h00,
     CPU_RUN
 };
 
@@ -101,16 +110,16 @@ uart_rx uart_rx(
 );
 
 uart_tx uart_tx(
-   .clk_i(sys_clk),
-   .rst_n_i(sys_rst_n),
+    .clk_i(sys_clk),
+    .rst_n_i(sys_rst_n),
 
-   .uart_tx_data_i(uart_tx_data),
-   .uart_tx_data_vld_i(uart_tx_data_vld),
+    .uart_tx_data_i(uart_tx_data),
+    .uart_tx_data_vld_i(uart_tx_data_vld),
 
-   .uart_tx_baud_div_i(32'd107),
+    .uart_tx_baud_div_i(32'd107),
 
-   .uart_tx_o(uart_tx_o),
-   .uart_tx_data_rdy_o(uart_tx_data_rdy)
+    .uart_tx_o(uart_tx_o),
+    .uart_tx_data_rdy_o(uart_tx_data_rdy)
 );
 
 ram_rw #(
@@ -146,7 +155,7 @@ ram #(
 
     .ram_rw_sel_i(ram_rw_sel),
     .ram_rw_addr_i(ram_rw_addr),
-    .ram_wr_data_i({uart_rx_data, uart_rx_data, uart_rx_data, uart_rx_data}),
+    .ram_wr_data_i(uart_rx_data),
     .ram_wr_byte_en_i(ram_wr_byte_en),
 
     .iram_rd_addr_i(iram_rd_addr),

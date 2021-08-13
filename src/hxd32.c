@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     conf_wr(sfd, 0x10000000, size - 1);
     data_rd(sfd, bfd, size);
 
-    lseek(bfd, 0x10, SEEK_SET);
+    lseek(bfd, 0x1010, SEEK_SET);
 
     count = 0;
     while (count < size) {

@@ -13,7 +13,7 @@ module ram #(
 
     input logic            ram_rw_sel_i,
     input logic [XLEN-1:0] ram_rw_addr_i,
-    input logic [XLEN-1:0] ram_wr_data_i,
+    input logic      [7:0] ram_wr_data_i,
     input logic      [3:0] ram_wr_byte_en_i,
 
     input logic [XLEN-1:0] iram_rd_addr_i,
@@ -29,35 +29,35 @@ module ram #(
     output logic [7:0] ram_rd_data_o
 );
 
-logic [XLEN-1:0] iram_rw_addr_0;
-logic [XLEN-1:0] iram_rw_addr_1;
-logic [XLEN-1:0] iram_rw_addr_2;
-logic [XLEN-1:0] iram_rw_addr_3;
+logic [XLEN-1:2] iram_rw_addr_0;
+logic [XLEN-1:2] iram_rw_addr_1;
+logic [XLEN-1:2] iram_rw_addr_2;
+logic [XLEN-1:2] iram_rw_addr_3;
 
 logic [7:0] iram_rd_data_0;
 logic [7:0] iram_rd_data_1;
 logic [7:0] iram_rd_data_2;
 logic [7:0] iram_rd_data_3;
 
-logic [XLEN-1:0] dram_rd_addr_0;
-logic [XLEN-1:0] dram_rd_addr_1;
-logic [XLEN-1:0] dram_rd_addr_2;
-logic [XLEN-1:0] dram_rd_addr_3;
+logic [XLEN-1:2] dram_rd_addr_0;
+logic [XLEN-1:2] dram_rd_addr_1;
+logic [XLEN-1:2] dram_rd_addr_2;
+logic [XLEN-1:2] dram_rd_addr_3;
 
 logic [7:0] dram_rd_data_0;
 logic [7:0] dram_rd_data_1;
 logic [7:0] dram_rd_data_2;
 logic [7:0] dram_rd_data_3;
 
-logic [XLEN-1:0] dram_wr_addr_0;
-logic [XLEN-1:0] dram_wr_addr_1;
-logic [XLEN-1:0] dram_wr_addr_2;
-logic [XLEN-1:0] dram_wr_addr_3;
+logic [XLEN-1:2] dram_wr_addr_0;
+logic [XLEN-1:2] dram_wr_addr_1;
+logic [XLEN-1:2] dram_wr_addr_2;
+logic [XLEN-1:2] dram_wr_addr_3;
 
-logic [XLEN-1:0] dram_wr_data_0;
-logic [XLEN-1:0] dram_wr_data_1;
-logic [XLEN-1:0] dram_wr_data_2;
-logic [XLEN-1:0] dram_wr_data_3;
+logic [7:0] dram_wr_data_0;
+logic [7:0] dram_wr_data_1;
+logic [7:0] dram_wr_data_2;
+logic [7:0] dram_wr_data_3;
 
 logic dram_wr_byte_en_0;
 logic dram_wr_byte_en_1;
@@ -65,8 +65,11 @@ logic dram_wr_byte_en_2;
 logic dram_wr_byte_en_3;
 
 logic [XLEN-1:0] iram_rw_addr;
+logic [XLEN-1:0] iram_rw_addr_r1;
 
 logic [XLEN-1:0] dram_rd_addr;
+logic [XLEN-1:0] dram_rd_addr_r1;
+
 logic [XLEN-1:0] dram_wr_addr;
 logic [XLEN-1:0] dram_wr_data;
 logic      [3:0] dram_wr_byte_en;
@@ -91,7 +94,7 @@ wire [XLEN-1:2] dram_wr_addr_b = dram_wr_addr[XLEN-1:2] + 1'b1;
 assign iram_rd_data_o = iram_rd_data;
 assign dram_rd_data_o = dram_rd_data;
 
-assign ram_rd_data_o = iram_rw_en ? iram_rd_data[7:0] : (dram_rd_en ? dram_rd_data[7:0] : 8'h00);
+assign ram_rd_data_o = iram_rw_en ? iram_rd_data : (dram_rd_en ? dram_rd_data : 8'h00);
 
 iram iram_0(
     .clka(clk_i),
@@ -195,7 +198,7 @@ always_comb begin
 
         dram_rd_addr    = ram_rw_addr_i;
         dram_wr_addr    = ram_rw_addr_i;
-        dram_wr_data    = ram_wr_data_i;
+        dram_wr_data    = {4{ram_wr_data_i}};
         dram_wr_byte_en = ram_wr_byte_en_i;
     end else begin
         iram_rw_addr    = iram_rd_addr_i;
@@ -212,31 +215,38 @@ always_comb begin
             iram_rw_addr_1 = iram_rw_addr_a;
             iram_rw_addr_2 = iram_rw_addr_a;
             iram_rw_addr_3 = iram_rw_addr_a;
-
-            iram_rd_data = {iram_rd_data_3, iram_rd_data_2, iram_rd_data_1, iram_rd_data_0};
         end
         2'b01: begin
             iram_rw_addr_0 = iram_rw_addr_b;
             iram_rw_addr_1 = iram_rw_addr_a;
             iram_rw_addr_2 = iram_rw_addr_a;
             iram_rw_addr_3 = iram_rw_addr_a;
-
-            iram_rd_data = {iram_rd_data_0, iram_rd_data_3, iram_rd_data_2, iram_rd_data_1};
         end
         2'b10: begin
             iram_rw_addr_0 = iram_rw_addr_b;
             iram_rw_addr_1 = iram_rw_addr_b;
             iram_rw_addr_2 = iram_rw_addr_a;
             iram_rw_addr_3 = iram_rw_addr_a;
-
-            iram_rd_data = {iram_rd_data_1, iram_rd_data_0, iram_rd_data_3, iram_rd_data_2};
         end
         2'b11: begin
             iram_rw_addr_0 = iram_rw_addr_b;
             iram_rw_addr_1 = iram_rw_addr_b;
             iram_rw_addr_2 = iram_rw_addr_b;
             iram_rw_addr_3 = iram_rw_addr_a;
+        end
+    endcase
 
+    case (iram_rw_addr_r1[1:0])
+        2'b00: begin
+            iram_rd_data = {iram_rd_data_3, iram_rd_data_2, iram_rd_data_1, iram_rd_data_0};
+        end
+        2'b01: begin
+            iram_rd_data = {iram_rd_data_0, iram_rd_data_3, iram_rd_data_2, iram_rd_data_1};
+        end
+        2'b10: begin
+            iram_rd_data = {iram_rd_data_1, iram_rd_data_0, iram_rd_data_3, iram_rd_data_2};
+        end
+        2'b11: begin
             iram_rd_data = {iram_rd_data_2, iram_rd_data_1, iram_rd_data_0, iram_rd_data_3};
         end
     endcase
@@ -247,31 +257,38 @@ always_comb begin
             dram_rd_addr_1 = dram_rd_addr_a;
             dram_rd_addr_2 = dram_rd_addr_a;
             dram_rd_addr_3 = dram_rd_addr_a;
-
-            dram_rd_data = {dram_rd_data_3, dram_rd_data_2, dram_rd_data_1, dram_rd_data_0};
         end
         2'b01: begin
             dram_rd_addr_0 = dram_rd_addr_b;
             dram_rd_addr_1 = dram_rd_addr_a;
             dram_rd_addr_2 = dram_rd_addr_a;
             dram_rd_addr_3 = dram_rd_addr_a;
-
-            dram_rd_data = {dram_rd_data_0, dram_rd_data_3, dram_rd_data_2, dram_rd_data_1};
         end
         2'b10: begin
             dram_rd_addr_0 = dram_rd_addr_b;
             dram_rd_addr_1 = dram_rd_addr_b;
             dram_rd_addr_2 = dram_rd_addr_a;
             dram_rd_addr_3 = dram_rd_addr_a;
-
-            dram_rd_data = {dram_rd_data_1, dram_rd_data_0, dram_rd_data_3, dram_rd_data_2};
         end
         2'b11: begin
             dram_rd_addr_0 = dram_rd_addr_b;
             dram_rd_addr_1 = dram_rd_addr_b;
             dram_rd_addr_2 = dram_rd_addr_b;
             dram_rd_addr_3 = dram_rd_addr_a;
+        end
+    endcase
 
+    case (dram_rd_addr_r1[1:0])
+        2'b00: begin
+            dram_rd_data = {dram_rd_data_3, dram_rd_data_2, dram_rd_data_1, dram_rd_data_0};
+        end
+        2'b01: begin
+            dram_rd_data = {dram_rd_data_0, dram_rd_data_3, dram_rd_data_2, dram_rd_data_1};
+        end
+        2'b10: begin
+            dram_rd_data = {dram_rd_data_1, dram_rd_data_0, dram_rd_data_3, dram_rd_data_2};
+        end
+        2'b11: begin
             dram_rd_data = {dram_rd_data_2, dram_rd_data_1, dram_rd_data_0, dram_rd_data_3};
         end
     endcase
@@ -342,6 +359,17 @@ always_comb begin
             dram_wr_byte_en_3 = dram_wr_byte_en[0];
         end
     endcase
+end
+
+always_ff @(posedge clk_i or negedge rst_n_i)
+begin
+    if (!rst_n_i) begin
+        iram_rw_addr_r1 <= {XLEN{1'b0}};
+        dram_rd_addr_r1 <= {XLEN{1'b0}};
+    end else begin
+        iram_rw_addr_r1 <= iram_rw_addr;
+        dram_rd_addr_r1 <= dram_rd_addr;
+    end
 end
 
 endmodule
