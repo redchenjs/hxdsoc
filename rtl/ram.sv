@@ -77,10 +77,10 @@ logic      [3:0] dram_wr_byte_en;
 logic [XLEN-1:0] iram_rd_data;
 logic [XLEN-1:0] dram_rd_data;
 
-wire iram_rw_en = (iram_rw_addr[31:16] == 16'h0000);
+wire iram_rw_en = (iram_rw_addr[31:24] == 8'h00);
 
-wire dram_rd_en = (dram_rd_addr[31:16] == 16'h1000);
-wire dram_wr_en = (dram_wr_addr[31:16] == 16'h1000);
+wire dram_rd_en = (dram_rd_addr[31:24] == 8'h10);
+wire dram_wr_en = (dram_wr_addr[31:24] == 8'h10);
 
 wire [XLEN-1:2] iram_rw_addr_a = iram_rw_addr[XLEN-1:2];
 wire [XLEN-1:2] iram_rw_addr_b = iram_rw_addr[XLEN-1:2] + 1'b1;
