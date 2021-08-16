@@ -76,7 +76,6 @@ logic       uart_tx_data_rdy;
 
 logic            ram_rw_sel;
 logic [XLEN-1:0] ram_rw_addr;
-logic      [7:0] ram_rd_data;
 logic      [3:0] ram_wr_byte_en;
 
 logic [XLEN-1:0] iram_rd_addr;
@@ -128,7 +127,7 @@ ram_rw #(
     .uart_rx_data_i(uart_rx_data),
     .uart_rx_data_vld_i(uart_rx_data_vld),
 
-    .ram_rd_data_i(ram_rd_data),
+    .ram_rd_data_i(dram_rd_data),
 
     .cpu_rst_n_o(cpu_rst_n),
 
@@ -161,9 +160,7 @@ ram #(
     .dram_wr_byte_en_i(dram_wr_byte_en),
 
     .iram_rd_data_o(iram_rd_data),
-    .dram_rd_data_o(dram_rd_data),
-
-    .ram_rd_data_o(ram_rd_data)
+    .dram_rd_data_o(dram_rd_data)
 );
 
 hxd32 #(

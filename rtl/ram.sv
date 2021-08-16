@@ -24,10 +24,11 @@ module ram #(
     input logic      [3:0] dram_wr_byte_en_i,
 
     output logic [XLEN-1:0] iram_rd_data_o,
-    output logic [XLEN-1:0] dram_rd_data_o,
-
-    output logic [7:0] ram_rd_data_o
+    output logic [XLEN-1:0] dram_rd_data_o
 );
+
+logic iram_rw_en_r1;
+logic dram_rd_en_r1;
 
 logic [XLEN-1:2] iram_rw_addr_0;
 logic [XLEN-1:2] iram_rw_addr_1;
@@ -91,10 +92,8 @@ wire [XLEN-1:2] dram_rd_addr_b = dram_rd_addr[XLEN-1:2] + 1'b1;
 wire [XLEN-1:2] dram_wr_addr_a = dram_wr_addr[XLEN-1:2];
 wire [XLEN-1:2] dram_wr_addr_b = dram_wr_addr[XLEN-1:2] + 1'b1;
 
-assign iram_rd_data_o = iram_rd_data;
-assign dram_rd_data_o = dram_rd_data;
-
-assign ram_rd_data_o = iram_rw_en ? iram_rd_data : (dram_rd_en ? dram_rd_data : 8'h00);
+assign iram_rd_data_o = iram_rw_en_r1 ? iram_rd_data : {XLEN{1'bz}};
+assign dram_rd_data_o = dram_rd_en_r1 ? dram_rd_data : {XLEN{1'bz}};
 
 iram iram_0(
     .clka(clk_i),
@@ -364,9 +363,15 @@ end
 always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
+        iram_rw_en_r1 <= 1'b0;
+        dram_rd_en_r1 <= 1'b0;
+
         iram_rw_addr_r1 <= {XLEN{1'b0}};
         dram_rd_addr_r1 <= {XLEN{1'b0}};
     end else begin
+        iram_rw_en_r1 <= iram_rw_en;
+        dram_rd_en_r1 <= dram_rd_en;
+
         iram_rw_addr_r1 <= iram_rw_addr;
         dram_rd_addr_r1 <= dram_rd_addr;
     end
