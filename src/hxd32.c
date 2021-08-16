@@ -62,22 +62,6 @@ void conf_rd(int sfd, uint32_t *addr, uint32_t *size)
     *size = recv_buff[1];
 }
 
-void zero_mem(int sfd, uint32_t size)
-{
-    uint8_t read_buff = 0;
-    uint8_t send_buff[] = {0x2e};
-
-    write(sfd, send_buff, sizeof(send_buff));
-
-    for (int i = 0; i < size; i++) {
-        write(sfd, &read_buff, 1);
-
-        printf(">> ZERO: %d%%\r", i * 100 / size);
-    }
-
-    printf("=> ZERO: 100%%\n");
-}
-
 void data_wr(int sfd, int ifd, uint32_t size)
 {
     uint8_t read_buff = 0;
@@ -199,16 +183,15 @@ int main(int argc, char *argv[])
     // cpu reset
     cpu_rst(sfd);
 
-    // clear iram
-    conf_wr(sfd, 0x00000000, 0x00010000 - 1);
-    zero_mem(sfd, 0x00010000);
-
     stat(iramfile, &st);
     size = st.st_size;
 
     // write iram
-    conf_wr(sfd, 0x00000000, size - 1);
+    conf_wr(sfd, 0x00000000, size + 3);
     data_wr(sfd, ifd, size);
+
+    // zero iram
+    write(sfd, &data, 4);
 
     stat(dramfile, &st);
     size = st.st_size;
