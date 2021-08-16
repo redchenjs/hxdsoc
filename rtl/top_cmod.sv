@@ -38,23 +38,22 @@ logic [7:0] uart_tx_data;
 logic       uart_tx_data_vld;
 logic       uart_tx_data_rdy;
 
-logic            ram_rw_sel;
-logic [XLEN-1:0] ram_rw_addr;
-logic      [3:0] ram_wr_byte_en;
+wire [XLEN-1:0] iram_rd_addr;
+wire [XLEN-1:0] iram_wr_addr;
+wire [XLEN-1:0] iram_wr_data;
+wire      [3:0] iram_wr_byte_en;
 
-logic [XLEN-1:0] iram_rd_addr;
+wire [XLEN-1:0] dram_rd_addr;
+wire [XLEN-1:0] dram_wr_addr;
+wire [XLEN-1:0] dram_wr_data;
+wire      [3:0] dram_wr_byte_en;
 
-logic [XLEN-1:0] dram_rd_addr;
-logic [XLEN-1:0] dram_wr_addr;
-logic [XLEN-1:0] dram_wr_data;
-logic      [3:0] dram_wr_byte_en;
+wire [XLEN-1:0] iram_rd_data;
+wire [XLEN-1:0] dram_rd_data;
 
-logic [XLEN-1:0] iram_rd_data;
-logic [XLEN-1:0] dram_rd_data;
-
-assign led0_r_n_o = ~(~rst_i & ~cpu_rst_n & ~ram_rw_sel);
+assign led0_r_n_o = ~(~rst_i & ~cpu_rst_n & ~cpu_fault);
 assign led0_g_n_o = ~(~rst_i & cpu_rst_n);
-assign led0_b_n_o = ~(~rst_i & ~cpu_rst_n & ram_rw_sel);
+assign led0_b_n_o = ~(~rst_i & ~cpu_rst_n & cpu_fault);
 assign led1_o = uart_rx_data_vld;
 assign led2_o = uart_tx_data_vld;
 
@@ -100,23 +99,28 @@ ram_rw #(
 
     .cpu_fault_i(cpu_fault),
 
-    .uart_tx_data_rdy_i(uart_tx_data_rdy),
-
     .uart_rx_data_i(uart_rx_data),
     .uart_rx_data_vld_i(uart_rx_data_vld),
+    .uart_tx_data_rdy_i(uart_tx_data_rdy),
 
-    .ram_rd_data_i(dram_rd_data),
+    .iram_rd_data_i(iram_rd_data),
+    .dram_rd_data_i(dram_rd_data),
 
     .cpu_rst_n_o(cpu_rst_n),
 
-    .ram_rw_sel_o(ram_rw_sel),
-    .ram_rw_addr_o(ram_rw_addr),
-    .ram_wr_byte_en_o(ram_wr_byte_en),
-
+    .uart_tx_data_o(uart_tx_data),
+    .uart_tx_data_vld_o(uart_tx_data_vld),
     .uart_rx_data_rdy_o(uart_rx_data_rdy),
 
-    .uart_tx_data_o(uart_tx_data),
-    .uart_tx_data_vld_o(uart_tx_data_vld)
+    .iram_rd_addr_io(iram_rd_addr),
+    .iram_wr_addr_io(iram_wr_addr),
+    .iram_wr_data_io(iram_wr_data),
+    .iram_wr_byte_en_io(iram_wr_byte_en),
+
+    .dram_rd_addr_io(dram_rd_addr),
+    .dram_wr_addr_io(dram_wr_addr),
+    .dram_wr_data_io(dram_wr_data),
+    .dram_wr_byte_en_io(dram_wr_byte_en)
 );
 
 ram #(
@@ -125,20 +129,18 @@ ram #(
     .clk_i(sys_clk),
     .rst_n_i(sys_rst_n),
 
-    .ram_rw_sel_i(ram_rw_sel),
-    .ram_rw_addr_i(ram_rw_addr),
-    .ram_wr_data_i(uart_rx_data),
-    .ram_wr_byte_en_i(ram_wr_byte_en),
-
     .iram_rd_addr_i(iram_rd_addr),
+    .iram_wr_addr_i(iram_wr_addr),
+    .iram_wr_data_i(iram_wr_data),
+    .iram_wr_byte_en_i(iram_wr_byte_en),
 
     .dram_rd_addr_i(dram_rd_addr),
     .dram_wr_addr_i(dram_wr_addr),
     .dram_wr_data_i(dram_wr_data),
     .dram_wr_byte_en_i(dram_wr_byte_en),
 
-    .iram_rd_data_o(iram_rd_data),
-    .dram_rd_data_o(dram_rd_data)
+    .iram_rd_data_io(iram_rd_data),
+    .dram_rd_data_io(dram_rd_data)
 );
 
 hxd32 #(
@@ -150,12 +152,12 @@ hxd32 #(
     .iram_rd_data_i(iram_rd_data),
     .dram_rd_data_i(dram_rd_data),
 
-    .iram_rd_addr_o(iram_rd_addr),
-    .dram_rd_addr_o(dram_rd_addr),
+    .iram_rd_addr_io(iram_rd_addr),
+    .dram_rd_addr_io(dram_rd_addr),
 
-    .dram_wr_addr_o(dram_wr_addr),
-    .dram_wr_data_o(dram_wr_data),
-    .dram_wr_byte_en_o(dram_wr_byte_en),
+    .dram_wr_addr_io(dram_wr_addr),
+    .dram_wr_data_io(dram_wr_data),
+    .dram_wr_byte_en_io(dram_wr_byte_en),
 
     .cpu_fault_o(cpu_fault)
 );

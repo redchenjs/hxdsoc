@@ -14,12 +14,12 @@ module hxd32 #(
     input logic [XLEN-1:0] iram_rd_data_i,
     input logic [XLEN-1:0] dram_rd_data_i,
 
-    output logic [XLEN-1:0] iram_rd_addr_o,
-    output logic [XLEN-1:0] dram_rd_addr_o,
+    inout logic [XLEN-1:0] iram_rd_addr_io,
+    inout logic [XLEN-1:0] dram_rd_addr_io,
 
-    output logic [XLEN-1:0] dram_wr_addr_o,
-    output logic [XLEN-1:0] dram_wr_data_o,
-    output logic      [3:0] dram_wr_byte_en_o,
+    inout logic [XLEN-1:0] dram_wr_addr_io,
+    inout logic [XLEN-1:0] dram_wr_data_io,
+    inout logic      [3:0] dram_wr_byte_en_io,
 
     output logic cpu_fault_o
 );
@@ -109,12 +109,12 @@ logic [XLEN-1:0] reg_wr_data_r1;
 
 assign inst_data = ~pc_wr_en_r1 | (pc_wr_sel_r1 != PC_WR_NEXT) ? 32'h0000_0013 : iram_rd_data_i;
 
-assign iram_rd_addr_o = pc_data;
-assign dram_rd_addr_o = alu_data;
+assign iram_rd_addr_io = rst_n_i ? pc_data : {XLEN{1'bz}};
+assign dram_rd_addr_io = rst_n_i ? alu_data : {XLEN{1'bz}};
 
-assign dram_wr_addr_o    = alu_data;
-assign dram_wr_data_o    = rs2_rd_data;
-assign dram_wr_byte_en_o = dram_wr_byte_en;
+assign dram_wr_addr_io    = rst_n_i ? alu_data : {XLEN{1'bz}};
+assign dram_wr_data_io    = rst_n_i ? rs2_rd_data : {XLEN{1'bz}};
+assign dram_wr_byte_en_io = rst_n_i ? dram_wr_byte_en : {4{1'bz}};
 
 assign cpu_fault_o = inst_error;
 

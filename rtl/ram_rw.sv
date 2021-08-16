@@ -13,23 +13,28 @@ module ram_rw #(
 
     input logic cpu_fault_i,
 
-    input logic uart_tx_data_rdy_i,
-
     input logic [7:0] uart_rx_data_i,
     input logic       uart_rx_data_vld_i,
+    input logic       uart_tx_data_rdy_i,
 
-    input logic [7:0] ram_rd_data_i,
+    input logic [XLEN-1:0] iram_rd_data_i,
+    input logic [XLEN-1:0] dram_rd_data_i,
 
     output logic cpu_rst_n_o,
 
     output logic [7:0] uart_tx_data_o,
     output logic       uart_tx_data_vld_o,
+    output logic       uart_rx_data_rdy_o,
 
-    output logic uart_rx_data_rdy_o,
+    inout logic [XLEN-1:0] iram_rd_addr_io,
+    inout logic [XLEN-1:0] iram_wr_addr_io,
+    inout logic [XLEN-1:0] iram_wr_data_io,
+    inout logic      [3:0] iram_wr_byte_en_io,
 
-    output logic            ram_rw_sel_o,
-    output logic [XLEN-1:0] ram_rw_addr_o,
-    output logic      [3:0] ram_wr_byte_en_o
+    inout logic [XLEN-1:0] dram_rd_addr_io,
+    inout logic [XLEN-1:0] dram_wr_addr_io,
+    inout logic [XLEN-1:0] dram_wr_data_io,
+    inout logic      [3:0] dram_wr_byte_en_io
 );
 
 typedef enum logic [7:0] {
@@ -74,12 +79,17 @@ assign cpu_rst_n_o = cpu_rst_n;
 
 assign uart_tx_data_o     = tx_data;
 assign uart_tx_data_vld_o = tx_data_vld;
-
 assign uart_rx_data_rdy_o = rx_data_rdy;
 
-assign ram_rw_sel_o     = ram_rd_en | ram_wr_en;
-assign ram_rw_addr_o    = ram_rd_en ? ram_rd_addr : {ram_wr_addr[XLEN-1:2], 2'h00};
-assign ram_wr_byte_en_o = ram_wr_byte_en & {4{rx_data_vld & ~cmd_en}};
+assign iram_rd_addr_io    = ~cpu_rst_n ? ram_rd_addr : {XLEN{1'bz}};
+assign iram_wr_addr_io    = ~cpu_rst_n ? ram_wr_addr : {XLEN{1'bz}};
+assign iram_wr_data_io    = ~cpu_rst_n ? uart_rx_data_i : {XLEN{1'bz}};
+assign iram_wr_byte_en_io = ~cpu_rst_n ? ram_wr_en & rx_data_vld & ~cmd_en : {4{1'bz}};
+
+assign dram_rd_addr_io    = ~cpu_rst_n ? ram_rd_addr : {XLEN{1'bz}};
+assign dram_wr_addr_io    = ~cpu_rst_n ? ram_wr_addr : {XLEN{1'bz}};
+assign dram_wr_data_io    = ~cpu_rst_n ? uart_rx_data_i : {XLEN{1'bz}};
+assign dram_wr_byte_en_io = ~cpu_rst_n ? ram_wr_en & rx_data_vld & ~cmd_en : {4{1'bz}};
 
 edge2en rx_data_vld_en(
     .clk_i(clk_i),
@@ -117,8 +127,8 @@ begin
         tx_data     <= 8'h00;
         tx_data_vld <= 1'b0;
 
-        ram_rd_cnt  <= 32'h0000_0000;
-        ram_rd_addr <= 32'h0000_0000;
+        ram_rd_cnt  <= {XLEN{1'b0}};
+        ram_rd_addr <= {XLEN{1'b0}};
     end else begin
         if (tx_data_rdy) begin
             if (cfg_rd_en) begin
@@ -141,12 +151,12 @@ begin
                         tx_data <= ram_rw_size[31:24];
                 endcase
             end else if (ram_rd_en) begin
-                tx_data <= ram_rd_data_i;
+                tx_data <= dram_rd_data_i;
             end else if (cpu_fault_i) begin
                 tx_data <= 8'hef;
             end
 
-            ram_rd_cnt <= (ram_rd_cnt == cmd_cnt) ? 32'h0000_0000 : ram_rd_cnt + 1'b1;
+            ram_rd_cnt <= (ram_rd_cnt == cmd_cnt) ? {XLEN{1'b0}} : ram_rd_cnt + 1'b1;
 
             tx_data_vld <= 1'b1;
         end else begin
@@ -161,7 +171,7 @@ always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
         cmd_en  <= 1'b1;
-        cmd_cnt <= 32'h0000_0000;
+        cmd_cnt <= {XLEN{1'b0}};
 
         cpu_rst_n <= 1'b0;
 
@@ -171,13 +181,11 @@ begin
         ram_wr_en <= 1'b0;
         ram_rd_en <= 1'b0;
 
-        ram_rw_addr <= 32'h0000_0000;
-        ram_rw_size <= 32'h0000_0000;
+        ram_rw_addr <= {XLEN{1'b0}};
+        ram_rw_size <= {XLEN{1'b0}};
 
-        ram_wr_cnt  <= 32'h0000_0000;
-        ram_wr_addr <= 32'h0000_0000;
-
-        ram_wr_byte_en <= 4'b0000;
+        ram_wr_cnt  <= {XLEN{1'b0}};
+        ram_wr_addr <= {XLEN{1'b0}};
     end else begin
         if (rx_data_vld) begin
             if (cmd_en) begin  // Command
@@ -192,8 +200,6 @@ begin
 
                         ram_wr_en <= 1'b0;
                         ram_rd_en <= 1'b0;
-
-                        ram_wr_byte_en <= 4'b0000;
                     end
                     CPU_RUN: begin
                         cmd_en <= 1'b1;
@@ -205,8 +211,6 @@ begin
 
                         ram_wr_en <= 1'b0;
                         ram_rd_en <= 1'b0;
-
-                        ram_wr_byte_en <= 4'b0000;
                     end
                     CONF_WR: begin
                         cmd_en <= 1'b0;
@@ -218,8 +222,6 @@ begin
 
                         ram_wr_en <= 1'b0;
                         ram_rd_en <= 1'b0;
-
-                        ram_wr_byte_en <= 4'b0000;
                     end
                     CONF_RD: begin
                         cmd_en <= 1'b0;
@@ -231,8 +233,6 @@ begin
 
                         ram_wr_en <= 1'b0;
                         ram_rd_en <= 1'b0;
-
-                        ram_wr_byte_en <= 4'b0000;
                     end
                     DATA_WR: begin
                         cmd_en <= 1'b0;
@@ -244,8 +244,6 @@ begin
 
                         ram_wr_en <= 1'b1;
                         ram_rd_en <= 1'b0;
-
-                        ram_wr_byte_en <= 4'b0001;
                     end
                     DATA_RD: begin
                         cmd_en <= 1'b0;
@@ -257,12 +255,10 @@ begin
 
                         ram_wr_en <= 1'b0;
                         ram_rd_en <= 1'b1;
-
-                        ram_wr_byte_en <= 4'b0000;
                     end
                 endcase
 
-                ram_wr_cnt  <= 32'h0000_0000;
+                ram_wr_cnt  <= {XLEN{1'b0}};
                 ram_wr_addr <= ram_rw_addr;
             end else begin    // Data
                 cmd_en <= (ram_wr_cnt == cmd_cnt) ? 1'b1 : cmd_en;
@@ -291,8 +287,7 @@ begin
                     endcase
                 end
 
-                ram_wr_cnt     <= (ram_wr_cnt == cmd_cnt) ? 32'h0000_0000 : ram_wr_cnt + $unsigned(cfg_wr_en | ram_wr_en);
-                ram_wr_byte_en <= (ram_wr_cnt == cmd_cnt) ? 4'b0000 : {ram_wr_byte_en[2:0], ram_wr_byte_en[3]};
+                ram_wr_cnt <= (ram_wr_cnt == cmd_cnt) ? {XLEN{1'b0}} : ram_wr_cnt + $unsigned(cfg_wr_en | ram_wr_en);
             end
         end else begin
             cmd_en  <= (ram_rd_cnt == cmd_cnt) & tx_data_rdy ? 1'b1 : cmd_en;
