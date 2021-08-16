@@ -9,20 +9,17 @@
 
 module test_uart;
 
+localparam BAUD_DIV = 32'd98;
+
 logic clk_i;
 logic rst_n_i;
 
 logic [7:0] uart_tx_data_i;
 logic       uart_tx_data_vld_i;
 
-logic [31:0] uart_tx_baud_div_i;
-
 logic uart_tx_o;
 logic uart_tx_data_rdy_o;
-
 logic uart_rx_data_rdy_i;
-
-logic [31:0] uart_rx_baud_div_i;
 
 logic       uart_rx_data_vld_o;
 logic [7:0] uart_rx_data_o;
@@ -36,7 +33,7 @@ uart_tx uart_tx(
     .uart_tx_data_vld_i(uart_tx_data_vld_i),
     .uart_tx_data_i(uart_tx_data_i),
 
-    .uart_tx_baud_div_i(uart_tx_baud_div_i),
+    .uart_tx_baud_div_i(BAUD_DIV),
 
     .uart_tx_o(uart_tx_o),
     .uart_tx_data_rdy_o(uart_tx_data_rdy_o)
@@ -49,7 +46,7 @@ uart_rx uart_rx(
     .uart_rx_i(uart_tx_o),
     .uart_rx_data_rdy_i(uart_rx_data_rdy_i),
 
-    .uart_rx_baud_div_i(uart_rx_baud_div_i),
+    .uart_rx_baud_div_i(BAUD_DIV),
 
     .uart_rx_data_vld_o(uart_rx_data_vld_o),
     .uart_rx_data_o(uart_rx_data_o)
@@ -62,7 +59,7 @@ uart_tx uart_tx_2(
     .uart_tx_data_vld_i(uart_rx_data_vld_o),
     .uart_tx_data_i(uart_rx_data_o),
 
-    .uart_tx_baud_div_i(uart_tx_baud_div_i),
+    .uart_tx_baud_div_i(BAUD_DIV),
 
     .uart_tx_o(uart_tx_2_o),
     .uart_tx_data_rdy_o(uart_rx_data_rdy_i)
@@ -82,9 +79,6 @@ end
 initial begin
     clk_i   <= 1'b1;
     rst_n_i <= 1'b0;
-
-    uart_tx_baud_div_i <= 32'd100;
-    uart_rx_baud_div_i <= 32'd100;
 
     #2 rst_n_i <= 1'b1;
 end

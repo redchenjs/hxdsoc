@@ -22,7 +22,8 @@ module top_cmod(
     output logic led2_o
 );
 
-localparam XLEN = 32;
+localparam XLEN     = 32;
+localparam BAUD_DIV = 32'd52;
 
 logic sys_clk;
 logic sys_rst_n;
@@ -72,7 +73,7 @@ uart_rx uart_rx(
     .uart_rx_i(uart_rx_i),
     .uart_rx_data_rdy_i(uart_rx_data_rdy),
 
-    .uart_rx_baud_div_i(32'd52),
+    .uart_rx_baud_div_i(BAUD_DIV),
 
     .uart_rx_data_o(uart_rx_data),
     .uart_rx_data_vld_o(uart_rx_data_vld)
@@ -85,7 +86,7 @@ uart_tx uart_tx(
     .uart_tx_data_i(uart_tx_data),
     .uart_tx_data_vld_i(uart_tx_data_vld),
 
-    .uart_tx_baud_div_i(32'd52),
+    .uart_tx_baud_div_i(BAUD_DIV),
 
     .uart_tx_o(uart_tx_o),
     .uart_tx_data_rdy_o(uart_tx_data_rdy)

@@ -73,7 +73,6 @@ logic [XLEN-1:0] ram_rd_addr;
 
 logic [XLEN-1:0] ram_wr_cnt;
 logic [XLEN-1:0] ram_wr_addr;
-logic      [3:0] ram_wr_byte_en;
 
 assign cpu_rst_n_o = cpu_rst_n;
 
