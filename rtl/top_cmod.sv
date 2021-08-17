@@ -23,7 +23,7 @@ module top_cmod(
 );
 
 localparam XLEN     = 32;
-localparam BAUD_DIV = 32'd52;
+localparam BAUD_DIV = 32'd63;
 
 logic sys_clk;
 logic sys_rst_n;
