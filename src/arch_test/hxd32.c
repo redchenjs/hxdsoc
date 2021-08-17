@@ -31,7 +31,7 @@ void cpu_rst(int sfd)
 
     write(sfd, send_buff, sizeof(send_buff));
 
-    printf("=> CPU Reset....\n");
+    printf("=> CPU_RST....\n");
 }
 
 void cpu_run(int sfd)
@@ -40,7 +40,7 @@ void cpu_run(int sfd)
 
     write(sfd, send_buff, sizeof(send_buff));
 
-    printf("=> CPU Running....\n");
+    printf("=> CPU_RUN....\n");
 }
 
 void conf_wr(int sfd, uint32_t addr, uint32_t size)
@@ -75,10 +75,10 @@ void data_wr(int sfd, int ifd, uint32_t size)
         read(ifd, &read_buff, 1);
         write(sfd, &read_buff, 1);
 
-        printf(">> SENT: %d%%\r", i * 100 / size);
+        printf(">> DATA_WR: %d%%\r", i * 100 / size);
     }
 
-    printf("=> SENT: 100%%\n");
+    printf("=> DATA_WR: 100%%\n");
 }
 
 void data_rd(int sfd, int ofd, uint32_t size)
@@ -94,10 +94,10 @@ void data_rd(int sfd, int ofd, uint32_t size)
         read(sfd, &read_buff, 1);
         write(ofd, &read_buff, 1);
 
-        printf("<< RECV: %d%%\r", i * 100 / size);
+        printf("<< DATA_RD: %d%%\r", i * 100 / size);
     }
 
-    printf("<= RECV: 100%%\n");
+    printf("<= DATA_RD: 100%%\n");
 }
 
 int main(int argc, char *argv[])
