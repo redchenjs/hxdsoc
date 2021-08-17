@@ -150,7 +150,7 @@ begin
                         tx_data <= ram_rw_size[31:24];
                 endcase
             end else if (ram_rd_en) begin
-                tx_data <= dram_rd_data_i;
+                tx_data <= (ram_rd_addr[31:24] == 8'h00) ? iram_rd_data_i : dram_rd_data_i;
             end else if (cpu_fault_i) begin
                 tx_data <= 8'hef;
             end
