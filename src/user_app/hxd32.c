@@ -105,7 +105,6 @@ int main(int argc, char *argv[])
     int sfd, ifd, dfd, ofd;
     struct stat st;
     struct termios conf;
-    char data_str[10] = {0};
     char *port = argv[1];
     char *iramfile = argv[2];
     char *dramfile = argv[3];
@@ -143,8 +142,8 @@ int main(int argc, char *argv[])
     conf.c_lflag &= ~(ISIG | ICANON);
     conf.c_cflag |= CLOCAL | CREAD | CS8;
 
-    conf.c_cc[VMIN] = 0;
-    conf.c_cc[VTIME] = 1;
+    conf.c_cc[VMIN] = 1;
+    conf.c_cc[VTIME] = 0;
 
     cfsetispeed(&conf, B921600);
     cfsetospeed(&conf, B921600);
@@ -175,21 +174,30 @@ int main(int argc, char *argv[])
     size = st.st_size;
 
     // write dram
-    conf_wr(sfd, 0x10000000, size - 1);
-    data_wr(sfd, dfd, size);
+    if (size != 0) {
+        conf_wr(sfd, 0x10000000, size - 1);
+        data_wr(sfd, dfd, size);
+    }
 
     // cpu run
     cpu_run(sfd);
 
     // wait cpu
-    read(sfd, data_str, 1);
+    while (data != 0xef) {
+        read(sfd, &data, 1);
+    }
 
     stat(dramfile, &st);
     size = st.st_size;
 
     // read dram
-    conf_wr(sfd, 0x10000000, size - 1);
-    data_rd(sfd, ofd, size);
+    if (size != 0) {
+        conf_wr(sfd, 0x10000000, size - 1);
+        data_rd(sfd, ofd, size);
+    }
+
+    // cpu reset
+    cpu_rst(sfd);
 
     close(ofd);
     close(dfd);

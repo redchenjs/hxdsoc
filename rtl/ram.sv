@@ -21,8 +21,8 @@ module ram #(
     input logic [XLEN-1:0] dram_wr_data_i,
     input logic      [3:0] dram_wr_byte_en_i,
 
-    inout logic [XLEN-1:0] iram_rd_data_io,
-    inout logic [XLEN-1:0] dram_rd_data_io
+    inout wire [XLEN-1:0] iram_rd_data_io,
+    inout wire [XLEN-1:0] dram_rd_data_io
 );
 
 logic iram_rd_en_r1;

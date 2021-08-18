@@ -26,15 +26,15 @@ module ram_rw #(
     output logic       uart_tx_data_vld_o,
     output logic       uart_rx_data_rdy_o,
 
-    inout logic [XLEN-1:0] iram_rd_addr_io,
-    inout logic [XLEN-1:0] iram_wr_addr_io,
-    inout logic [XLEN-1:0] iram_wr_data_io,
-    inout logic      [3:0] iram_wr_byte_en_io,
+    inout wire [XLEN-1:0] iram_rd_addr_io,
+    inout wire [XLEN-1:0] iram_wr_addr_io,
+    inout wire [XLEN-1:0] iram_wr_data_io,
+    inout wire      [3:0] iram_wr_byte_en_io,
 
-    inout logic [XLEN-1:0] dram_rd_addr_io,
-    inout logic [XLEN-1:0] dram_wr_addr_io,
-    inout logic [XLEN-1:0] dram_wr_data_io,
-    inout logic      [3:0] dram_wr_byte_en_io
+    inout wire [XLEN-1:0] dram_rd_addr_io,
+    inout wire [XLEN-1:0] dram_wr_addr_io,
+    inout wire [XLEN-1:0] dram_wr_data_io,
+    inout wire      [3:0] dram_wr_byte_en_io
 );
 
 typedef enum logic [7:0] {
@@ -151,7 +151,7 @@ begin
                 endcase
             end else if (ram_rd_en) begin
                 tx_data <= (ram_rd_addr[31:24] == 8'h00) ? iram_rd_data_i : dram_rd_data_i;
-            end else if (cpu_fault_i) begin
+            end else begin
                 tx_data <= 8'hef;
             end
 
@@ -290,7 +290,7 @@ begin
             end
         end else begin
             cmd_en  <= (ram_rd_cnt == cmd_cnt) & tx_data_rdy ? 1'b1 : cmd_en;
-            cmd_cnt <= (cfg_wr_en | cfg_rd_en) ? 32'h0000_0007 : ram_rw_size;
+            cmd_cnt <= (cfg_wr_en | cfg_rd_en) ? 3'h7 : (cpu_fault_i ? {XLEN{1'b0}} : ram_rw_size);
 
             cfg_rd_en <= (ram_rd_cnt == cmd_cnt) & tx_data_rdy ? 1'b0 : cfg_rd_en;
             ram_rd_en <= (ram_rd_cnt == cmd_cnt) & tx_data_rdy ? 1'b0 : ram_rd_en;

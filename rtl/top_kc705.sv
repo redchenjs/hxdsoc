@@ -54,7 +54,7 @@ wire [XLEN-1:0] dram_rd_data;
 
 assign gpio_led_o[7] = sys_rst_n;
 assign gpio_led_o[6] = cpu_rst_n;
-assign gpio_led_o[5] = 1'b0;
+assign gpio_led_o[5] = cpu_fault;
 assign gpio_led_o[4] = 1'b0;
 assign gpio_led_o[3] = uart_rx_data_vld;
 assign gpio_led_o[2] = uart_rx_data_rdy;

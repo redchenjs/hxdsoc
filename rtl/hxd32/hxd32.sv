@@ -14,12 +14,12 @@ module hxd32 #(
     input logic [XLEN-1:0] iram_rd_data_i,
     input logic [XLEN-1:0] dram_rd_data_i,
 
-    inout logic [XLEN-1:0] iram_rd_addr_io,
-    inout logic [XLEN-1:0] dram_rd_addr_io,
+    inout wire [XLEN-1:0] iram_rd_addr_io,
+    inout wire [XLEN-1:0] dram_rd_addr_io,
 
-    inout logic [XLEN-1:0] dram_wr_addr_io,
-    inout logic [XLEN-1:0] dram_wr_data_io,
-    inout logic      [3:0] dram_wr_byte_en_io,
+    inout wire [XLEN-1:0] dram_wr_addr_io,
+    inout wire [XLEN-1:0] dram_wr_data_io,
+    inout wire      [3:0] dram_wr_byte_en_io,
 
     output logic cpu_fault_o
 );
@@ -366,7 +366,7 @@ begin
     if (!rst_n_i) begin
         inst_error <= 1'b0;
     end else begin
-        inst_error <= (inst_data == 32'h0000_0000) ? 1'b1 : inst_error;
+        inst_error <= (inst_data[15:0] == 16'h0000) ? 1'b1 : inst_error;
     end
 end
 
