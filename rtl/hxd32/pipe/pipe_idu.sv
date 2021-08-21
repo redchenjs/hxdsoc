@@ -13,7 +13,7 @@ module pipe_idu #(
 
     input logic       pc_wr_en_i,
     input logic [1:0] pc_wr_sel_i,
-    input logic       pc_inc_sel_i,
+    input logic [1:0] pc_inc_sel_i,
 
     input logic [1:0] alu_a_sel_i,
     input logic [1:0] alu_b_sel_i,
@@ -38,7 +38,7 @@ module pipe_idu #(
 
     output logic       pc_wr_en_o,
     output logic [1:0] pc_wr_sel_o,
-    output logic       pc_inc_sel_o,
+    output logic [1:0] pc_inc_sel_o,
 
     output logic [1:0] alu_a_sel_o,
     output logic [1:0] alu_b_sel_o,
@@ -67,7 +67,7 @@ begin
     if (!rst_n_i) begin
         pc_wr_en_o   <= 1'b0;
         pc_wr_sel_o  <= 2'b00;
-        pc_inc_sel_o <= 1'b0;
+        pc_inc_sel_o <= 2'b00;
 
         alu_a_sel_o <= 2'b00;
         alu_b_sel_o <= 2'b00;

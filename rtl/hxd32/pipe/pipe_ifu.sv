@@ -12,20 +12,16 @@ module pipe_ifu #(
     input logic rst_n_i,
 
     input logic [XLEN-1:0] pc_data_i,
-    input logic [XLEN-1:0] pc_next_i,
 
-    output logic [XLEN-1:0] pc_data_o,
-    output logic [XLEN-1:0] pc_next_o
+    output logic [XLEN-1:0] pc_data_o
 );
 
 always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
         pc_data_o <= {XLEN{1'b0}};
-        pc_next_o <= {XLEN{1'b0}};
     end else begin
         pc_data_o <= pc_data_i;
-        pc_next_o <= pc_next_i;
     end
 end
 

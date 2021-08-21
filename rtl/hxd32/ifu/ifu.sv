@@ -13,12 +13,11 @@ module ifu #(
 
     input logic       pc_wr_en_i,
     input logic [1:0] pc_wr_sel_i,
-    input logic       pc_inc_sel_i,
+    input logic [1:0] pc_inc_sel_i,
 
     input logic [XLEN-1:0] alu_data_i,
 
-    output logic [XLEN-1:0] pc_data_o,
-    output logic [XLEN-1:0] pc_next_o
+    output logic [XLEN-1:0] pc_data_o
 );
 
 pc pc(
@@ -31,8 +30,7 @@ pc pc(
 
     .alu_data_i(alu_data_i),
 
-    .pc_data_o(pc_data_o),
-    .pc_next_o(pc_next_o)
+    .pc_data_o(pc_data_o)
 );
 
 endmodule

@@ -19,7 +19,7 @@ module wb #(
     input logic [1:0] rd_wr_sel_r_i,
     input logic [4:0] rd_wr_addr_r_i,
 
-    input logic [XLEN-1:0] pc_next_i,
+    input logic [XLEN-1:0] pc_data_i,
 
     input logic [XLEN-1:0] alu_data_i,
 
@@ -42,6 +42,9 @@ logic            reg_wr_en_1;
 logic      [4:0] reg_wr_addr_1;
 logic [XLEN-1:0] reg_wr_data_1;
 
+wire [XLEN-1:0] pc_inc_4 = pc_data_i + 3'h4;
+wire [XLEN-1:0] pc_inc_2 = pc_data_i + 3'h2;
+
 assign reg_wr_en_o   = (rd_wr_sel_r_i == RD_WR_DRAM) ? reg_wr_en_1 : reg_wr_en_0;
 assign reg_wr_addr_o = (rd_wr_sel_r_i == RD_WR_DRAM) ? reg_wr_addr_1 : reg_wr_addr_0;
 assign reg_wr_data_o = (rd_wr_sel_r_i == RD_WR_DRAM) ? reg_wr_data_1 : reg_wr_data_0;
@@ -53,10 +56,15 @@ always_comb begin
             reg_wr_addr_0 = rd_wr_addr_i;
             reg_wr_data_0 = alu_data_i;
         end
-        RD_WR_PC_NEXT: begin
+        RD_WR_PC_INC_4: begin
             reg_wr_en_0   = rd_wr_en_i;
             reg_wr_addr_0 = rd_wr_addr_i;
-            reg_wr_data_0 = pc_next_i;
+            reg_wr_data_0 = pc_inc_4;
+        end
+        RD_WR_PC_INC_2: begin
+            reg_wr_en_0   = rd_wr_en_i;
+            reg_wr_addr_0 = rd_wr_addr_i;
+            reg_wr_data_0 = pc_inc_2;
         end
         default: begin
             reg_wr_en_0   = 1'b0;

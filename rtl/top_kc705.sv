@@ -22,7 +22,7 @@ module top_kc705(
 );
 
 localparam XLEN     = 32;
-localparam BAUD_DIV = 32'd107;
+localparam BAUD_DIV = 32'd85;
 
 logic sys_clk;
 logic sys_clk_i;

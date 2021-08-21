@@ -10,11 +10,13 @@ module idu #(
 ) (
     input logic alu_comp_i,
 
+    input logic [1:0] pc_inc_sel_r_i,
+
     input logic [XLEN-1:0] inst_data_i,
 
     output logic       pc_wr_en_o,
     output logic [1:0] pc_wr_sel_o,
-    output logic       pc_inc_sel_o,
+    output logic [1:0] pc_inc_sel_o,
 
     output logic [1:0] alu_a_sel_o,
     output logic [1:0] alu_b_sel_o,
@@ -42,6 +44,8 @@ decode #(
     .XLEN(XLEN)
 ) decode (
     .alu_comp_i(alu_comp_i),
+
+    .pc_inc_sel_r_i(pc_inc_sel_r_i),
 
     .inst_data_i(inst_data_i),
 

@@ -29,10 +29,9 @@ logic            inst_error;
 
 logic       pc_wr_en;
 logic [1:0] pc_wr_sel;
-logic       pc_inc_sel;
+logic [1:0] pc_inc_sel;
 
 logic [XLEN-1:0] pc_data;
-logic [XLEN-1:0] pc_next;
 
 logic            alu_comp;
 logic [XLEN-1:0] alu_data;
@@ -70,10 +69,9 @@ logic [XLEN-1:0] reg_wr_data;
 
 logic       pc_wr_en_r1;
 logic [1:0] pc_wr_sel_r1;
-logic       pc_inc_sel_r1;
+logic [1:0] pc_inc_sel_r1;
 
 logic [XLEN-1:0] pc_data_r1;
-logic [XLEN-1:0] pc_next_r1;
 
 logic            alu_comp_r1;
 logic [XLEN-1:0] alu_data_r1;
@@ -107,7 +105,7 @@ logic            reg_wr_en_r1;
 logic      [4:0] reg_wr_addr_r1;
 logic [XLEN-1:0] reg_wr_data_r1;
 
-assign inst_data = ~pc_wr_en_r1 | (pc_wr_sel_r1 != PC_WR_NEXT) ? 32'h0000_0013 : iram_rd_data_i;
+assign inst_data = pc_inc_sel_r1[1] | ~pc_wr_en_r1 | (pc_wr_sel_r1 != PC_WR_NEXT) ? (pc_inc_sel_r1[0] ? 32'h0005_0005 : 32'h0000_0013) : iram_rd_data_i;
 
 assign iram_rd_addr_io = rst_n_i ? pc_data : {XLEN{1'bz}};
 assign dram_rd_addr_io = rst_n_i ? alu_data : {XLEN{1'bz}};
@@ -130,8 +128,7 @@ ifu #(
 
     .alu_data_i(alu_data),
 
-    .pc_data_o(pc_data),
-    .pc_next_o(pc_next)
+    .pc_data_o(pc_data)
 );
 
 pipe_ifu #(
@@ -141,16 +138,15 @@ pipe_ifu #(
     .rst_n_i(rst_n_i),
 
     .pc_data_i(pc_data),
-    .pc_next_i(pc_next),
-
-    .pc_data_o(pc_data_r1),
-    .pc_next_o(pc_next_r1)
+    .pc_data_o(pc_data_r1)
 );
 
 idu #(
     .XLEN(XLEN)
 ) idu (
     .alu_comp_i(alu_comp),
+
+    .pc_inc_sel_r_i(pc_inc_sel_r1),
 
     .inst_data_i(inst_data),
 
@@ -332,7 +328,7 @@ wb #(
     .rd_wr_sel_r_i(rd_wr_sel_r1),
     .rd_wr_addr_r_i(rd_wr_addr_r1),
 
-    .pc_next_i(pc_next_r1),
+    .pc_data_i(pc_data_r1),
 
     .alu_data_i(alu_data),
 
