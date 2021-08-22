@@ -614,7 +614,7 @@ always_comb begin
 
                 dram_wr_en = 1'b0;
 
-                case (rsd_c11 == 5'h02)
+                case (~|{rsd_c11[4:2], rsd_c11[0]})
                     OPCODE_C_EXT1_LUI: begin
                         rs1_rd_addr = 5'h00;
 

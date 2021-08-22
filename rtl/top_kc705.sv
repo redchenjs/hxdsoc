@@ -14,6 +14,9 @@ module top_kc705(
     input  logic uart_rx_i,
     output logic uart_tx_o,
 
+    input  logic uart1_rx_i,
+    output logic uart1_tx_o,
+
     input  logic sm_fan_tach_i,
     output logic sm_fan_pwm_o,
 
@@ -101,6 +104,22 @@ uart_tx uart_tx(
 
     .uart_tx_o(uart_tx_o),
     .uart_tx_data_rdy_o(uart_tx_data_rdy)
+);
+
+uart uart(
+    .clk_i(sys_clk),
+    .rst_n_i(sys_rst_n),
+
+    .uart_rx_i(uart1_rx_i),
+
+    .rd_addr_i(dram_rd_addr),
+    .wr_addr_i(dram_wr_addr),
+    .wr_data_i(dram_wr_data),
+    .wr_byte_en_i(dram_wr_byte_en),
+
+    .uart_tx_o(uart1_tx_o),
+
+    .rd_data_io(dram_rd_data)
 );
 
 ram_rw #(

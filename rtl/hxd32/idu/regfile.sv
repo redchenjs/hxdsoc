@@ -33,10 +33,10 @@ module regfile #(
 logic [XLEN-1:0] regs[REG_N-1:1];
 logic [XLEN-1:0] data[REG_N-1:0];
 
-genvar i;
 generate
     assign data[0] = {XLEN{1'b0}};
 
+    genvar i;
     for (i = 1; i < REG_N; i++) begin: rd_data
         assign data[i] = regs[i];
     end

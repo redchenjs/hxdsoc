@@ -105,7 +105,7 @@ logic            reg_wr_en_r1;
 logic      [4:0] reg_wr_addr_r1;
 logic [XLEN-1:0] reg_wr_data_r1;
 
-assign inst_data = pc_inc_sel_r1[1] | ~pc_wr_en_r1 | (pc_wr_sel_r1 != PC_WR_NEXT) ? (pc_inc_sel_r1[0] ? 32'h0005_0005 : 32'h0000_0013) : iram_rd_data_i;
+assign inst_data = pc_inc_sel_r1[1] | ~pc_wr_en_r1 | (pc_wr_sel_r1 != PC_WR_NEXT) ? (pc_inc_sel_r1[0] ? 32'h0001_0001 : 32'h0000_0013) : iram_rd_data_i;
 
 assign iram_rd_addr_io = rst_n_i ? pc_data : {XLEN{1'bz}};
 assign dram_rd_addr_io = rst_n_i ? alu_data : {XLEN{1'bz}};
