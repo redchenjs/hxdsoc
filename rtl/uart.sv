@@ -68,13 +68,13 @@ logic [XLEN-1:0] data[4];
 logic [XLEN-1:0] rd_data;
 logic            rd_en_r1;
 
-logic [7:0] uart_tx_data;
-logic       uart_tx_data_vld;
-logic       uart_tx_data_rdy;
+logic [7:0] tx_data;
+logic       tx_data_vld;
+logic       tx_data_rdy;
 
-logic [7:0] uart_rx_data;
-logic       uart_rx_data_vld;
-logic       uart_rx_data_rdy;
+logic [7:0] rx_data;
+logic       rx_data_vld;
+logic       rx_data_rdy;
 
 uart_ctrl_0_t uart_ctrl_0 = 32'h0000_0000;
 uart_ctrl_1_t uart_ctrl_1 = 32'h0000_0000;
@@ -90,10 +90,10 @@ assign data[UART_REG_CTRL_1]  = uart_ctrl_1;
 assign data[UART_REG_DATA_TX] = uart_data_tx;
 assign data[UART_REG_DATA_RX] = uart_data_rx;
 
-assign uart_data_tx.tx_data = uart_tx_data;
-assign uart_data_tx.tx_flag = uart_tx_data_rdy;
-assign uart_data_rx.rx_data = uart_rx_data;
-assign uart_data_rx.rx_flag = uart_rx_data_vld;
+assign uart_data_tx.tx_data = tx_data;
+assign uart_data_tx.tx_flag = tx_data_rdy;
+assign uart_data_rx.rx_data = rx_data;
+assign uart_data_rx.rx_flag = rx_data_vld;
 
 assign rd_data_io = rd_en_r1 ? rd_data : {XLEN{1'bz}};
 
@@ -101,13 +101,13 @@ uart_tx uart_tx(
     .clk_i(clk_i),
     .rst_n_i(uart_ctrl_1.rst_n),
 
-    .uart_tx_data_i(uart_tx_data),
-    .uart_tx_data_vld_i(uart_tx_data_vld),
+    .uart_tx_data_i(tx_data),
+    .uart_tx_data_vld_i(tx_data_vld),
 
     .uart_tx_baud_div_i(uart_ctrl_0.baud),
 
     .uart_tx_o(uart_tx_o),
-    .uart_tx_data_rdy_o(uart_tx_data_rdy)
+    .uart_tx_data_rdy_o(tx_data_rdy)
 );
 
 uart_rx uart_rx(
@@ -115,12 +115,12 @@ uart_rx uart_rx(
     .rst_n_i(uart_ctrl_1.rst_n),
 
     .uart_rx_i(uart_rx_i),
-    .uart_rx_data_rdy_i(uart_rx_data_rdy),
+    .uart_rx_data_rdy_i(rx_data_rdy),
 
     .uart_rx_baud_div_i(uart_ctrl_0.baud),
 
-    .uart_rx_data_o(uart_rx_data),
-    .uart_rx_data_vld_o(uart_rx_data_vld)
+    .uart_rx_data_o(rx_data),
+    .uart_rx_data_vld_o(rx_data_vld)
 );
 
 always_ff @(posedge clk_i or negedge rst_n_i)
@@ -131,8 +131,8 @@ begin
         uart_ctrl_0.baud  <= {XLEN{1'b0}};
         uart_ctrl_1.rst_n <= 1'b0;
 
-        uart_tx_data     <= 8'h00;
-        uart_tx_data_vld <= 1'b0;
+        tx_data     <= 8'h00;
+        tx_data_vld <= 1'b0;
     end else begin
         rd_data <= rd_en ? data[rd_addr_i[3:2]] : rd_data;
 
@@ -145,12 +145,12 @@ begin
                     uart_ctrl_1.rst_n <= wr_data_i;
                 end
                 UART_REG_DATA_TX: begin
-                    uart_tx_data     <= wr_data_i;
-                    uart_tx_data_vld <= 1'b1;
+                    tx_data     <= wr_data_i;
+                    tx_data_vld <= 1'b1;
                 end
             endcase
         end else begin
-            uart_tx_data_vld <= uart_tx_data_rdy ? 1'b0 : uart_tx_data_vld;
+            tx_data_vld <= tx_data_rdy ? 1'b0 : tx_data_vld;
         end
     end
 end
@@ -158,9 +158,9 @@ end
 always_ff @(posedge clk_i or negedge rst_n_i)
 begin
     if (!rst_n_i) begin
-        uart_rx_data_rdy <= 1'b0;
+        rx_data_rdy <= 1'b0;
     end else begin
-        uart_rx_data_rdy <= uart_rx_data_vld ? (rd_en & (rd_addr_i[3:2] == UART_REG_DATA_RX) ? 1'b1 : uart_rx_data_rdy) : 1'b0;
+        rx_data_rdy <= rx_data_vld ? (rd_en & (rd_addr_i[3:2] == UART_REG_DATA_RX) ? 1'b1 : rx_data_rdy) : 1'b0;
     end
 end
 

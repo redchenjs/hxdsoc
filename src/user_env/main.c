@@ -64,8 +64,8 @@ typedef struct {
     uint8_t rsvd_3;
 } uart_ctrl_1_t;
 
-uint32_t ctrl_0 = 0xdeadbeef;
-uint32_t ctrl_1 = 0x61626364;
+uint32_t ctrl_0 = 0x00000000;
+uint32_t ctrl_1 = 0x00000000;
 
 uart_ctrl_0_t *p_ctrl_0 = (uart_ctrl_0_t *)&ctrl_0;
 uart_ctrl_1_t *p_ctrl_1 = (uart_ctrl_1_t *)&ctrl_1;
@@ -73,14 +73,14 @@ uart_ctrl_1_t *p_ctrl_1 = (uart_ctrl_1_t *)&ctrl_1;
 ssize_t _read(int fd, void *ptr, size_t len)
 {
     uint8_t *data = ptr;
-    uint32_t data_rx = 0x00000000;
+    uint32_t read = 0x00000000;
 
     for (size_t i = 0; i < len; i++) {
         do {
-            data_rx = UART_REG_DATA_RX;
-        } while (!(data_rx & BIT8));
+            read = UART_REG_DATA_RX;
+        } while (!(read & BIT8));
 
-        data[i] = data_rx;
+        data[i] = read;
     }
 
     return len;
@@ -116,8 +116,11 @@ int main(void)
     UART_REG_CTRL_0 = ctrl_0;
     UART_REG_CTRL_1 = ctrl_1;
 
+    printf("Hello World!\r\n");
+
     while (1) {
-        printf("Hello World!\r\n");
+        _read(0, &ctrl_1, 1);
+        _write(0, &ctrl_1, 1);
     }
 
     return 0;

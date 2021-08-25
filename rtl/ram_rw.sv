@@ -116,7 +116,7 @@ begin
     if (!rst_n_i) begin
         rx_data_rdy <= 1'b0;
     end else begin
-        rx_data_rdy <= rx_data_vld ? 1'b1 : (~uart_rx_data_vld_i ? 1'b0 : rx_data_rdy);
+        rx_data_rdy <= uart_rx_data_vld_i ? (rx_data_vld ? 1'b1 : rx_data_rdy) : 1'b0;
     end
 end
 
