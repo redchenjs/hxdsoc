@@ -3,9 +3,13 @@ RISCV_GCC     ?= $(RISCV_PREFIX)gcc
 RISCV_OBJDUMP ?= $(RISCV_PREFIX)objdump
 RISCV_OBJCOPY ?= $(RISCV_PREFIX)objcopy
 
-all:
-	$(RISCV_GCC) -static -march=rv32i -mabi=ilp32 -mcmodel=medany -nostdlib -nostartfiles -Tlink.ld main.c -S -o main.S
-	$(RISCV_GCC) -static -march=rv32i -mabi=ilp32 -mcmodel=medany -nostdlib -nostartfiles -Tlink.ld start.S main.S -o main.elf
+C_SRCS = uart.c main.c
+
+%.S: %.c
+	$(RISCV_GCC) -static -march=rv32i -mabi=ilp32 -mcmodel=medany -nostdlib -nostartfiles -Tlink.ld $^ -S -o $@
+
+all: $(C_SRCS)
+	$(RISCV_GCC) -static -march=rv32i -mabi=ilp32 -mcmodel=medany -nostdlib -nostartfiles -Tlink.ld start.S $^ -o main.elf
 
 	$(RISCV_OBJDUMP) main.elf -D > main.objdump
 
