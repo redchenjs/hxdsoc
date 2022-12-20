@@ -1,3 +1,6 @@
-[submodule "rtl/hxd32"]
-	path = rtl/hxd32
-	url = git@github.com:redchenjs/hxd32.git
+[submodule "hdl/hxd32"]
+	path = hdl/hxd32
+	url = https://github.com/redchenjs/hxd32.git
+[submodule "utils"]
+	path = utils
+	url = https://github.com/redchenjs/hdl_utils.git
